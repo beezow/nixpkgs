@@ -1202,6 +1202,11 @@
     github = "beardhatcode";
     githubId = 662538;
   };
+  beezow = {
+    email = "zbeezow@gmail.com";
+    github = "beezow";
+    githubId = 42082156;
+  };
   bendlas = {
     email = "herwig@bendlas.net";
     github = "bendlas";
