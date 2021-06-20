@@ -1203,6 +1203,7 @@
     githubId = 662538;
   };
   beezow = {
+    name = "beezow";  
     email = "zbeezow@gmail.com";
     github = "beezow";
     githubId = 42082156;
