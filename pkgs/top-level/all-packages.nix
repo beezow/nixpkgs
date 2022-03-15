@@ -31847,6 +31847,8 @@ with pkgs;
 
   emuflight-configurator = callPackage ../applications/science/robotics/emuflight-configurator { };
 
+  jesc-configurator = callPackage ../applications/science/robotics/jesc-configurator { };
+
   mission-planner = callPackage ../applications/science/robotics/mission-planner { };
 
   ### MISC
