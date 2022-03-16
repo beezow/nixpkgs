@@ -6680,6 +6680,8 @@ with pkgs;
 
   ifcopenshell = with python3Packages; toPythonApplication ifcopenshell;
 
+  ifcfg = with python3Packages; toPythonApplication ifcfg;
+
   iftop = callPackage ../tools/networking/iftop { };
 
   ifuse = callPackage ../tools/filesystems/ifuse { };
