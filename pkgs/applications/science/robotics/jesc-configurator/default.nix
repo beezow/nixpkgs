@@ -1,4 +1,5 @@
 {lib, stdenv, fetchurl, unzip, makeDesktopItem, copyDesktopItems
+, makeWrapper
 , nwjs
 , autoPatchelfHook
 , wrapGAppsHook, gsettings-desktop-schemas, gtk3 }:
@@ -18,21 +19,23 @@ stdenv.mkDerivation rec {
   inherit pname;
   version = "1.2.9";
   src = fetchurl {
-    url = "https://github.com/jflight-public/jesc-configurator/releases/download/v${version}/JESC-Configurator_linux64_${version}.zip";
-    sha256 = "704f63f4d6e05d9ac28bde73deeafb4119a8200c68029087e1453bd62431934f";
+    url = "https://github.com/jflight-public/jesc-configurator/archive/refs/tags/v${version}.zip";
+    sha256 = "4d06b8e10ccd17c9cc219445a9a5fc9453621d956ba04fc1d43e9021e9ef0b1a";
   };
 
   nativeBuildInputs = [ 
     unzip
+    makeWrapper
+    wrapGAppsHook
     copyDesktopItems
-    autoPatchelfHook
   ];
 
   buildInputs = [ nwjs gsettings-desktop-schemas gtk3 ];
 
   installPhase = ''
-    mkdir -p $out/bin
-    cp "jesc-configurator" $out/bin
+    mkdir -p $out/opt/${pname}
+    mv * $out/opt/${pname}
+    makeWrapper ${nwjs}/bin/nw $out/bin/${pname} --add-flags $out/opt/${pname}
   '';
 }
 
