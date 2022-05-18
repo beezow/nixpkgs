@@ -1,7 +1,33 @@
-{ lib, stdenv, fetchurl, coreutils, nettools, java, scala, polyml, z3, veriT, vampire, eprover-ho, rlwrap, perl, makeDesktopItem }:
+{ lib, stdenv, fetchurl, coreutils, nettools, java, scala, polyml, z3, veriT, vampire, eprover-ho, naproche, rlwrap, perl, makeDesktopItem, isabelle-components, isabelle, symlinkJoin, fetchhg }:
 # nettools needed for hostname
 
-stdenv.mkDerivation rec {
+let
+  sha1 = stdenv.mkDerivation {
+    pname = "isabelle-sha1";
+    version = "2021-1";
+
+    src = fetchhg {
+      url = "https://isabelle.sketis.net/repos/sha1";
+      rev = "e0239faa6f42";
+      sha256 = "sha256-4sxHzU/ixMAkSo67FiE6/ZqWJq9Nb9OMNhMoXH2bEy4=";
+    };
+
+    buildPhase = (if stdenv.isDarwin then ''
+      LDFLAGS="-dynamic -undefined dynamic_lookup -lSystem"
+    '' else ''
+      LDFLAGS="-fPIC -shared"
+    '') + ''
+      CFLAGS="-fPIC -I."
+      $CC $CFLAGS -c sha1.c -o sha1.o
+      $LD $LDFLAGS sha1.o -o libsha1.so
+    '';
+
+    installPhase = ''
+      mkdir -p $out/lib
+      cp libsha1.so $out/lib/
+    '';
+  };
+in stdenv.mkDerivation rec {
   pname = "isabelle";
   version = "2021-1";
 
@@ -66,7 +92,8 @@ stdenv.mkDerivation rec {
       ISABELLE_JDK_HOME=${java}
     EOF
 
-    sed -i -e 's/naproche_server : bool = true/naproche_server : bool = false/' contrib/naproche-*/etc/options
+    rm contrib/naproche-*/x86*/Naproche-SAD
+    ln -s ${naproche}/bin/Naproche-SAD contrib/naproche-*/x86*/
 
     echo ISABELLE_LINE_EDITOR=${rlwrap}/bin/rlwrap >>etc/settings
 
@@ -80,6 +107,9 @@ stdenv.mkDerivation rec {
     substituteInPlace src/Tools/Setup/src/Environment.java \
       --replace 'cmd.add("/usr/bin/env");' "" \
       --replace 'cmd.add("bash");' "cmd.add(\"$SHELL\");"
+
+    substituteInPlace src/Pure/General/sha1.ML \
+      --replace '"$ML_HOME/" ^ (if ML_System.platform_is_windows then "sha1.dll" else "libsha1.so")' '"${sha1}/lib/libsha1.so"'
 
     rm -r heaps
   '' + (if ! stdenv.isLinux then "" else ''
@@ -152,4 +182,29 @@ stdenv.mkDerivation rec {
     maintainers = [ maintainers.jwiegley maintainers.jvanbruegge ];
     platforms = platforms.linux;
   };
+} // {
+  withComponents = f:
+    let
+      base = "$out/${isabelle.dirname}";
+      components = f isabelle-components;
+    in symlinkJoin {
+      name = "isabelle-with-components-${isabelle.version}";
+      paths = [ isabelle ] ++ components;
+
+      postBuild = ''
+        rm $out/bin/*
+
+        cd ${base}
+        rm bin/*
+        cp ${isabelle}/${isabelle.dirname}/bin/* bin/
+        rm etc/components
+        cat ${isabelle}/${isabelle.dirname}/etc/components > etc/components
+
+        export HOME=$TMP
+        bin/isabelle install $out/bin
+        patchShebangs $out/bin
+      '' + lib.concatMapStringsSep "\n" (c: ''
+        echo contrib/${c.pname}-${c.version} >> ${base}/etc/components
+      '') components;
+    };
 }

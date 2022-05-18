@@ -5,14 +5,18 @@
 
 stdenv.mkDerivation rec {
   pname = "durden";
-  version = "0.6.1+date=2021-10-17";
+  version = "0.6.1+date=2022-04-16";
 
   src = fetchFromGitHub {
     owner = "letoram";
     repo = pname;
-    rev = "5fb8b0f9bc2952ed9cf7dc20a1c5c0cc44c02ff1";
-    hash = "sha256-+EIsrCkMe9MrUQOCh0R+rsDg/Rqs3iQWO0GZCgZQ+No=";
+    rev = "b07ba6535addf0d36a64385745cd9595f7d214b1";
+    hash = "sha256-nDSuJrJvJOVpRax+AwuNAZ3Ioqfoo10EGCab1EiPbIY=";
   };
+
+  dontConfigure = true;
+
+  dontBuild = true;
 
   installPhase = ''
     runHook preInstall

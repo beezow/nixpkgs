@@ -7,7 +7,6 @@
 , perl
 , which
 , pkg-config
-, patch
 , procps
 , pcre
 , cacert
@@ -45,7 +44,8 @@ let
     "riscv64" = "riscv64";
     "s390x" = "s390x";
     "powerpc64le" = "ppc64le";
-  }.${platform.parsed.cpu.name} or (throw "Unsupported system");
+    "mips64el" = "mips64le";
+  }.${platform.parsed.cpu.name} or (throw "Unsupported system: ${platform.parsed.cpu.name}");
 
   # We need a target compiler which is still runnable at build time,
   # to handle the cross-building case where build != host == target
@@ -54,15 +54,15 @@ in
 
 stdenv.mkDerivation rec {
   pname = "go";
-  version = "1.18";
+  version = "1.18.2";
 
   src = fetchurl {
     url = "https://go.dev/dl/go${version}.src.tar.gz";
-    sha256 = "sha256-OPQj20zINIg/K1I0QoL6ejn7uTZQ3GKhH98L5kCb2tY=";
+    sha256 = "sha256-LETQPqLDQJITerkZumAvLCYaA40I60aFKKPzoo5WZ+I=";
   };
 
   # perl is used for testing go vet
-  nativeBuildInputs = [ perl which pkg-config patch procps ];
+  nativeBuildInputs = [ perl which pkg-config procps ];
   buildInputs = [ cacert pcre ]
     ++ lib.optionals stdenv.isLinux [ stdenv.cc.libc.out ]
     ++ lib.optionals (stdenv.hostPlatform.libc == "glibc") [ stdenv.cc.libc.static ];

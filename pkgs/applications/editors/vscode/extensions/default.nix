@@ -5,6 +5,7 @@
 , vscode-utils
 , asciidoctor
 , nodePackages
+, python3Packages
 , jdk
 , llvmPackages_8
 , nixpkgs-fmt
@@ -63,6 +64,30 @@ let
         };
         meta = {
           license = lib.licenses.mit;
+        };
+      };
+
+      adpyke.codesnap = buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          name = "codesnap";
+          publisher = "adpyke";
+          version = "1.3.4";
+          sha256 = "sha256-dR6qODSTK377OJpmUqG9R85l1sf9fvJJACjrYhSRWgQ=";
+        };
+        meta = {
+          license = lib.licenses.mit;
+        };
+      };
+
+      alefragnani.bookmarks = buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          name = "bookmarks";
+          publisher = "alefragnani";
+          version = "13.0.1";
+          sha256 = "sha256-4IZCPNk7uBqPw/FKT5ypU2QxadQzYfwbGxxT/bUnKdE=";
+        };
+        meta = {
+          license = lib.licenses.gpl3;
         };
       };
 
@@ -553,8 +578,8 @@ let
         mktplcRef = {
           name = "vscode-markdownlint";
           publisher = "DavidAnson";
-          version = "0.46.0";
-          sha256 = "sha256-2FvE+6fnZPtR0At4NjLKSMCbPu8T7o8xtpvYiEjh7ck=";
+          version = "0.47.0";
+          sha256 = "sha256-KtDJo8rhQXkZtJz93E+J7eNiAIcLk4e5qKDLoR3DoGw=";
         };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/DavidAnson.vscode-markdownlint/changelog";
@@ -697,8 +722,8 @@ let
         mktplcRef = {
           name = "gitlens";
           publisher = "eamodio";
-          version = "12.0.3";
-          sha256 = "sha256-PHQXfk0JggkEBRflHp+OAUOCVuymCubaszfDCYbpfG0=";
+          version = "12.0.6";
+          sha256 = "sha256-Q8l/GryB9iMhFnu5npUcDjWuImfrmVZF3xvm7nX/77Q=";
         };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/eamodio.gitlens/changelog";
@@ -789,8 +814,8 @@ let
         mktplcRef = {
           name = "prettier-vscode";
           publisher = "esbenp";
-          version = "9.3.0";
-          sha256 = "sha256-hJgPjWf7a8+ltjmXTK8U/MwqgIZqBjmcCfHsAk2G3PA=";
+          version = "9.5.0";
+          sha256 = "sha256-L/jW6xAnJ8v9Qq+iyQI8usGr8BoICR+2ENAMGQ05r0A=";
         };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/esbenp.prettier-vscode/changelog";
@@ -1122,8 +1147,8 @@ let
         mktplcRef = {
           name = "Ionide-fsharp";
           publisher = "Ionide";
-          version = "5.10.1";
-          sha256 = "sha256-LkWWgyh4khPyUgekVeO8ZzPK+1gTrS8d9Yz6/kHomr8=";
+          version = "6.0.1";
+          sha256 = "sha256-1W1qKnjmyK80np+J6S/nku3QJGypxYnuE0BPw8Onzas=";
         };
         meta = with lib; {
           changelog = "https://marketplace.visualstudio.com/items/Ionide.Ionide-fsharp/changelog";
@@ -1241,8 +1266,8 @@ let
         mktplcRef = {
           name = "vscode-peacock";
           publisher = "johnpapa";
-          version = "4.0.0";
-          sha256 = "1i65w70f0kikah1cx7m0bji6qd800jabfci0xisdqxyzaksg7ysz";
+          version = "4.0.1";
+          sha256 = "sha256-oYXYOamwacgRqv3+ZREJ1vqRlwMz8LpO+wa6CVEEdbI=";
         };
         meta = with lib; {
           license = licenses.mit;
@@ -1310,6 +1335,33 @@ let
           homepage = "https://github.com/kamadorueda/alejandra";
           license = licenses.unlicense;
           maintainers = with maintainers; [ kamadorueda ];
+        };
+      };
+
+      kddejong.vscode-cfn-lint = let
+        inherit (python3Packages) cfn-lint;
+      in buildVscodeMarketplaceExtension {
+        mktplcRef = {
+          name = "vscode-cfn-lint";
+          publisher = "kddejong";
+          version = "0.21.0";
+          sha256 = "sha256-IueXiN+077tiecAsVCzgYksWYTs00mZv6XJVMtRJ/PQ=";
+        };
+
+        nativeBuildInputs = [ jq moreutils ];
+
+        buildInputs = [ cfn-lint ];
+
+        postInstall = ''
+          cd "$out/$installPrefix"
+          jq '.contributes.configuration.properties."cfnLint.path".default = "${cfn-lint}/bin/cfn-lint"' package.json | sponge package.json
+        '';
+
+        meta = with lib; {
+          description = "CloudFormation Linter IDE integration, autocompletion, and documentation";
+          homepage = "https://github.com/aws-cloudformation/cfn-lint-visual-studio-code";
+          license = lib.licenses.asl20;
+          maintainers = with maintainers; [ wolfangaukang ];
         };
       };
 
@@ -1438,8 +1490,8 @@ let
         mktplcRef = {
           name = "vscode-docker";
           publisher = "ms-azuretools";
-          version = "1.20.0";
-          sha256 = "sha256-i3gYTP76YEDItG2oXR9pEXuGv0qmyf1Xv6HQvDBEOyg=";
+          version = "1.22.0";
+          sha256 = "sha256-+cY9uLQ4oIk7V/4uCNc6BdIAQCXvPPGeqd0apbDjDos=";
         };
         meta = {
           license = lib.licenses.mit;
@@ -1671,8 +1723,8 @@ let
         mktplcRef = {
           name = "material-icon-theme";
           publisher = "PKief";
-          version = "4.14.1";
-          sha256 = "sha256-OHXi0EfeyKMeFiMU5yg0aDoWds4ED0lb+l6T12XZ3LQ=";
+          version = "4.16.0";
+          sha256 = "sha256-AOHvWoVB26caNgEEnKBhw5Z/tRtaTSeVLkO6Rlc/kqo=";
         };
         meta = {
           license = lib.licenses.mit;
@@ -2301,7 +2353,7 @@ let
   # then apply extension specific modifcations to packages.
 
   # overlays will be applied left to right, overrides should come after aliases.
-  overlays = lib.optionals (config.allowAliases or true) [ aliases ];
+  overlays = lib.optionals config.allowAliases [ aliases ];
 
   toFix = lib.foldl' (lib.flip lib.extends) baseExtensions overlays;
 in

@@ -41,6 +41,8 @@
 , ycmd
 , zoxide
 , nodejs
+, xdotool
+, xorg
 
 # test dependencies
 , neovim-unwrapped
@@ -173,10 +175,9 @@ self: super: {
   });
 
   cpsm = super.cpsm.overrideAttrs (old: {
+    nativeBuildInputs = [ cmake ];
     buildInputs = [
       python3
-      stdenv
-      cmake
       boost
       icu
       ncurses
@@ -292,6 +293,10 @@ self: super: {
     '';
   });
 
+  fzf-lua = super.fzf-lua.overrideAttrs (old: {
+    propagatedBuildInputs = [ fzf ];
+  });
+
   fzf-vim = super.fzf-vim.overrideAttrs (old: {
     dependencies = with self; [ fzfWrapper ];
   });
@@ -322,6 +327,9 @@ self: super: {
       sed -Ei lua/plenary/curl.lua \
           -e 's@(command\s*=\s*")curl(")@\1${curl}/bin/curl\2@'
     '';
+
+    doInstallCheck = true;
+    nvimRequireCheck = "plenary";
   });
 
   gruvbox-nvim = super.gruvbox-nvim.overrideAttrs (old: {
@@ -451,11 +459,8 @@ self: super: {
         --replace "code-minimap" "${code-minimap}/bin/code-minimap"
     '';
 
-    doCheck = true;
-    checkPhase = ''
-      ${neovim-unwrapped}/bin/nvim -n -u NONE -i NONE -V1 --cmd "set rtp+=$out" --cmd "runtime! plugin/*.vim" -c "MinimapToggle"  +quit!
-    '';
-
+    doInstallCheck = true;
+    vimCommandCheck = "MinimapToggle";
   });
 
   ncm2 = super.ncm2.overrideAttrs (old: {
@@ -609,6 +614,14 @@ self: super: {
       substituteInPlace plugin/statix.vim --replace statix ${statix}/bin/statix
     '';
   };
+
+  stylish-nvim = super.stylish-nvim.overrideAttrs (old: {
+      postPatch = ''
+        substituteInPlace lua/stylish/common/mouse_hover_handler.lua --replace xdotool ${xdotool}/bin/xdotool
+        substituteInPlace lua/stylish/components/menu.lua --replace xdotool ${xdotool}/bin/xdotool
+        substituteInPlace lua/stylish/components/menu.lua --replace xwininfo ${xorg.xwininfo}/bin/xwininfo
+      '';
+  });
 
   sved =
     let
@@ -832,7 +845,7 @@ self: super: {
             libiconv
           ];
 
-          cargoSha256 = "12xaxpg4ws09rnp9prrqcac8581ggr36mpy39xyfngjy5xvcalaq";
+          cargoSha256 = "0l1x7kprnxa95pbf8ml9ixmj0cmbnnv6nd0v6qry8j67rx8plpmp";
         };
       in
       ''
@@ -844,6 +857,16 @@ self: super: {
 
   vim-codefmt = super.vim-codefmt.overrideAttrs (old: {
     dependencies = with self; [ vim-maktaba ];
+  });
+
+  # Due to case-sensitivety issues, the hash differs on Darwin systems, see:
+  # https://github.com/NixOS/nixpkgs/issues/157609
+  vim-colorschemes = super.vim-colorschemes.overrideAttrs (old: {
+    src = old.src.overrideAttrs (srcOld: {
+      postFetch = (srcOld.postFetch or "") + lib.optionalString (!stdenv.isDarwin) ''
+        rm $out/colors/darkBlue.vim
+      '';
+    });
   });
 
   vim-dasht = super.vim-dasht.overrideAttrs (old: {
@@ -951,7 +974,7 @@ self: super: {
       vim-markdown-composer-bin = rustPlatform.buildRustPackage rec {
         pname = "vim-markdown-composer-bin";
         inherit (super.vim-markdown-composer) src version;
-        cargoSha256 = "03d7kap6vha1jmyfrjqaja5439x6mhnvjjbz3rmxb3x4dpppbpj1";
+        cargoSha256 = "0q0i6kyihswrjrfdj4p3z54b779sdg2wz38z943ypj6dqphhcklx";
       };
     in
     super.vim-markdown-composer.overrideAttrs (oldAttrs: rec {
@@ -1107,8 +1130,10 @@ self: super: {
       "coc-emmet"
       "coc-eslint"
       "coc-explorer"
+      "coc-flutter"
       "coc-git"
       "coc-go"
+      "coc-haxe"
       "coc-highlight"
       "coc-html"
       "coc-imselect"

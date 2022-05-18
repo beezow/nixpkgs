@@ -11,7 +11,7 @@
 
 buildPythonPackage rec {
   pname = "python-box";
-  version = "6.0.0";
+  version = "6.0.2";
   format = "setuptools";
 
   disabled = pythonOlder "3.6";
@@ -20,7 +20,7 @@ buildPythonPackage rec {
     owner = "cdgriffith";
     repo = "Box";
     rev = version;
-    hash = "sha256-YOYcI+OAuTumNtTylUc6dSY9shOE6eTr8M3rVbcy5hs=";
+    hash = "sha256-IE2qyRzvrOTymwga+hCwE785sAVTqQtcN1DL/uADpbQ=";
   };
 
   propagatedBuildInputs = [

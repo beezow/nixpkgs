@@ -10,21 +10,21 @@
 , Foundation
 , mandown
 , zellij
-, testVersion
+, testers
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "zellij";
-  version = "0.26.0";
+  version = "0.29.1";
 
   src = fetchFromGitHub {
     owner = "zellij-org";
     repo = "zellij";
     rev = "v${version}";
-    sha256 = "sha256-8PgEsRh2nBOIvKeX9SJ853NN8Szb4geKwv2qvTtkMxk=";
+    sha256 = "sha256-KuelmMQdCazwTlolH5xvvNXZfzHQDUV6rrlk037GFb8=";
   };
 
-  cargoSha256 = "sha256-YaqaXn1Ol5RfwAzWi7767vt1je+wqWFtfgxMOSIy9UI=";
+  cargoSha256 = "sha256-He8rMY8n15ZSF/GcbuYTx2JfZgqQnsZLfqP+lUYxnzw=";
 
   nativeBuildInputs = [
     mandown
@@ -54,7 +54,7 @@ rustPlatform.buildRustPackage rec {
       --zsh <($out/bin/zellij setup --generate-completion zsh)
   '';
 
-  passthru.tests.version = testVersion { package = zellij; };
+  passthru.tests.version = testers.testVersion { package = zellij; };
 
   meta = with lib; {
     description = "A terminal workspace with batteries included";

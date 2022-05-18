@@ -11,14 +11,14 @@
 
 rustPlatform.buildRustPackage rec {
   pname = "rust-analyzer-unwrapped";
-  version = "2022-02-28";
-  cargoSha256 = "sha256-dTw6xp99uGtGp6YuqAX3r3GDD6Wto3KHTaO2DUUE2FA=";
+  version = "2022-05-02";
+  cargoSha256 = "sha256-uZCUruIBTNTKYWYb8xQgJ6FsKlRi+Sh5n7m7aVk+hHQ=";
 
   src = fetchFromGitHub {
-    owner = "rust-analyzer";
+    owner = "rust-lang";
     repo = "rust-analyzer";
     rev = version;
-    sha256 = "sha256-GQ1cPO4povnozLl0MTFs0ZXpmBn+AZeFWQVnxHHWf9g=";
+    sha256 = "sha256-5kAbd/tTc9vkr27ar44hnpXdS0vQg0OLJUMlp0FBjqA=";
   };
 
   patches = [
@@ -61,5 +61,6 @@ rustPlatform.buildRustPackage rec {
     homepage = "https://rust-analyzer.github.io";
     license = with licenses; [ mit asl20 ];
     maintainers = with maintainers; [ oxalica ];
+    mainProgram = "rust-analyzer";
   };
 }

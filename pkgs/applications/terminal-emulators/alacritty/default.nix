@@ -3,9 +3,9 @@
 , fetchFromGitHub
 , fetchpatch
 , rustPlatform
+, nixosTests
 
 , cmake
-, gzip
 , installShellFiles
 , makeWrapper
 , ncurses
@@ -67,7 +67,6 @@ rustPlatform.buildRustPackage rec {
 
   nativeBuildInputs = [
     cmake
-    gzip
     installShellFiles
     makeWrapper
     ncurses
@@ -131,6 +130,8 @@ rustPlatform.buildRustPackage rec {
   '';
 
   dontPatchELF = true;
+
+  passthru.tests.test = nixosTests.terminal-emulators.alacritty;
 
   meta = with lib; {
     description = "A cross-platform, GPU-accelerated terminal emulator";
