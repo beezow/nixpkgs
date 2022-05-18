@@ -1,14 +1,13 @@
 { lib
 , stdenv
 , fetchurl
+, fetchpatch
 , gettext
 , ncurses
 , gtkGUI ? false
-, pkg-config ? null
-, gtk2 ? null
+, pkg-config
+, gtk2
 }:
-
-assert gtkGUI -> pkg-config != null && gtk2 != null;
 
 stdenv.mkDerivation rec {
   pname = "aumix";
@@ -19,19 +18,28 @@ stdenv.mkDerivation rec {
     sha256 = "0a8fwyxnc5qdxff8sl2sfsbnvgh6pkij4yafiln0fxgg6bal7knj";
   };
 
+  patches = [
+    # Pull Gentoo fix for -fno-common toolchains. Upstream does not
+    # seem to have the contacts
+    (fetchpatch {
+      name = "fno-common.patch";
+      url = "https://gitweb.gentoo.org/repo/gentoo.git/plain/media-sound/aumix/files/aumix-2.9.1-fno-common.patch?id=496c9ec7355f06f6d1d19be780a6981503e6df1f";
+      sha256 = "0qwylhx1hawsmx1pc7ykrjq9phksc73dq9rss6ggq15n3ggnc95y";
+    })
+  ];
+
   buildInputs = [ gettext ncurses ]
     ++ lib.optionals gtkGUI [ pkg-config gtk2 ];
 
-  meta = {
+  meta = with lib; {
     description = "Audio mixer for X and the console";
     longDescription = ''
       Aumix adjusts an audio mixer from X, the console, a terminal,
       the command line or a script.
     '';
     homepage = "http://www.jpj.net/~trevor/aumix.html";
-    license = lib.licenses.gpl2Plus;
-
-    maintainers = [ ];
-    platforms = lib.platforms.linux;
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ ];
+    platforms = platforms.linux;
   };
 }

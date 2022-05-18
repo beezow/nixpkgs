@@ -23,7 +23,7 @@
 let inherit (lib) getBin getLib; in
 
 mkDerivation {
-  name = "plasma-workspace";
+  pname = "plasma-workspace";
   passthru.providedSessions = [ "plasma" "plasmawayland" ];
 
   nativeBuildInputs = [ extra-cmake-modules kdoctools ];
@@ -52,7 +52,6 @@ mkDerivation {
   patches = [
     ./0001-startkde.patch
     ./0002-absolute-wallpaper-install-dir.patch
-    ./0003-startkde-unit-detection.patch
   ];
 
   # QT_INSTALL_BINS refers to qtbase, and qdbus is in qttools

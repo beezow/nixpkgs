@@ -15,32 +15,8 @@ let
     # header file isn't available at all, but that patch (./gvc-compat.patch)
     # can be shared between all versions of Vala so far.
     graphvizPatch =
-      let
-        fp = { commit, sha256 }: fetchpatch {
-          url = "https://github.com/openembedded/openembedded-core/raw/${commit}/meta/recipes-devtools/vala/vala/disable-graphviz.patch";
-          inherit sha256;
-        };
-
-      in {
-
-        # NOTE: the openembedded-core project doesn't have a patch for 0.40.12
-        # We've fixed the single merge conflict in the following patch.
-        #     0.40.12: https://github.com/openembedded/openembedded-core/raw/8553c52f174af4c8c433c543f806f5ed5c1ec48c/meta/recipes-devtools/vala/vala/disable-graphviz.patch
-        "0.40" = ./disable-graphviz-0.40.12.patch;
-
-        # NOTE: the openembedded-core project doesn't have a patch for 0.44.1
-        # We've reverted the addition of the "--disable-valadoc" option
-        # and then applied the following patch.
-        #     0.42.4: https://github.com/openembedded/openembedded-core/raw/f2b4f9ec6f44dced7f88df849cca68961419eeb8/meta/recipes-devtools/vala/vala/disable-graphviz.patch
-        "0.44" = ./disable-graphviz-0.44.3.patch;
-
-        "0.46" = ./disable-graphviz-0.46.1.patch;
-
+      {
         "0.48" = ./disable-graphviz-0.46.1.patch;
-
-        "0.50" = ./disable-graphviz-0.46.1.patch;
-
-        "0.52" = ./disable-graphviz-0.46.1.patch;
 
         "0.54" = ./disable-graphviz-0.46.1.patch;
 
@@ -108,34 +84,14 @@ let
   });
 
 in rec {
-  vala_0_40 = generic {
-    version = "0.40.25";
-    sha256 = "1pxpack8rrmywlf47v440hc6rv3vi8q9c6niwqnwikxvb2pwf3w7";
-  };
-
-  vala_0_46 = generic {
-    version = "0.46.13";
-    sha256 = "0d7l4vh2xra3q75kw3sy2d9bn5p6s3g3r7j37bdn6ir8l3wp2ivs";
-  };
-
   vala_0_48 = generic {
-    version = "0.48.19";
-    sha256 = "sha256-gLdlijfZhE/NG0Mdr8WATeYWpYGW5PHxGeWyrraLSgE=";
-  };
-
-  vala_0_50 = generic {
-    version = "0.50.10";
-    sha256 = "sha256-vnIf8/AYHqttM+zKzygfZvMI+qHl5VTwj99nFZpFlRU=";
-  };
-
-  vala_0_52 = generic {
-    version = "0.52.5";
-    sha256 = "sha256-hKG7MSs+Xcrkt7JcRVmNN14stpIzzvtZoV0jUMdr3ZE=";
+    version = "0.48.23";
+    sha256 = "sha256-3jzIWNmV4HR0IZ4lo+Hw7ZmAcNLiBtOjE9Q3ml93oGo=";
   };
 
   vala_0_54 = generic {
-    version = "0.54.1";
-    sha256 = "0jlhd6hr9mai7hhc2c78w6zmnzf7xncp7fhyiavkqqzhhsn7gpjx";
+    version = "0.54.7";
+    sha256 = "Ygecof8C5dF65yqppa3GGuav3P67DZ8GBjo2776soMc=";
   };
 
   vala = vala_0_54;

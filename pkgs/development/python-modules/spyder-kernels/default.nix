@@ -3,11 +3,11 @@
 
 buildPythonPackage rec {
   pname = "spyder-kernels";
-  version = "2.1.3";
+  version = "2.2.1";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "ab5c2a90d44f0a26e7a6862e3cb73bb2d7084bc72f9336d8c2d2a78c145c4645";
+    sha256 = "574ee1bd03f7236b9f9dacae34936a0625cd67ccfe3df11fec69f26889a0b866";
   };
 
   propagatedBuildInputs = [

@@ -20,13 +20,13 @@
 
 stdenv.mkDerivation rec {
   pname = "ddnet";
-  version = "15.5.4";
+  version = "15.9.1";
 
   src = fetchFromGitHub {
     owner = "ddnet";
     repo = pname;
     rev = version;
-    sha256 = "sha256-vJMYPaLK2CK+nbojLstXgxqIUaf7jNynpklFgtIpvGM=";
+    sha256 = "sha256-QGtXI4Dbua5LBXSvB17tnSTGEvCCoopvg1XKBuDIEoQ=";
   };
 
   nativeBuildInputs = [ cmake ninja pkg-config ];
@@ -68,7 +68,7 @@ stdenv.mkDerivation rec {
     '';
     homepage = "https://ddnet.tw";
     license = licenses.asl20;
-    maintainers = with maintainers; [ sirseruju legendofmiracles ];
+    maintainers = with maintainers; [ sirseruju lom ];
     mainProgram = "DDNet";
   };
 }

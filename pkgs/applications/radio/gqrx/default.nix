@@ -5,7 +5,6 @@
 , qt5
 , gnuradio3_8Minimal
 , thrift
-, log4cpp
 , mpir
 , fftwFloat
 , alsa-lib
@@ -14,19 +13,23 @@
 , rtl-sdr
 , hackrf
 , pulseaudioSupport ? true, libpulseaudio
+, portaudioSupport ? false, portaudio
 }:
 
 assert pulseaudioSupport -> libpulseaudio != null;
+assert portaudioSupport -> portaudio != null;
+# audio backends are mutually exclusive
+assert !(pulseaudioSupport && portaudioSupport);
 
 gnuradio3_8Minimal.pkgs.mkDerivation rec {
   pname = "gqrx";
-  version = "2.14.6";
+  version = "2.15.8";
 
   src = fetchFromGitHub {
-    owner = "csete";
+    owner = "gqrx-sdr";
     repo = "gqrx";
     rev = "v${version}";
-    sha256 = "sha256-DMmQXcGPudAVOwuc+LVrcIzfwMMQVBZPbM6Bt1w56D8=";
+    sha256 = "sha256-RxwkiJdPHWyhU3azSpWV2M0tG5GInQBpc/ls16V1B94=";
   };
 
   nativeBuildInputs = [
@@ -35,7 +38,7 @@ gnuradio3_8Minimal.pkgs.mkDerivation rec {
     qt5.wrapQtAppsHook
   ];
   buildInputs = [
-    log4cpp
+    gnuradio3_8Minimal.unwrapped.log4cpp
     mpir
     fftwFloat
     alsa-lib
@@ -49,12 +52,20 @@ gnuradio3_8Minimal.pkgs.mkDerivation rec {
   ] ++ lib.optionals (gnuradio3_8Minimal.hasFeature "gr-ctrlport") [
     thrift
     gnuradio3_8Minimal.unwrapped.python.pkgs.thrift
-  ] ++ lib.optionals pulseaudioSupport [ libpulseaudio ];
+  ] ++ lib.optionals pulseaudioSupport [ libpulseaudio ]
+    ++ lib.optionals portaudioSupport [ portaudio ];
 
-  postInstall = ''
-    install -vD $src/gqrx.desktop -t "$out/share/applications/"
-    install -vD $src/resources/icons/gqrx.svg -t "$out/share/pixmaps/"
-  '';
+  cmakeFlags =
+    let
+      audioBackend =
+        if pulseaudioSupport
+        then "Pulseaudio"
+        else if portaudioSupport
+        then "Portaudio"
+        else "Gr-audio";
+    in [
+      "-DLINUX_AUDIO_BACKEND=${audioBackend}"
+    ];
 
   meta = with lib; {
     description = "Software defined radio (SDR) receiver";

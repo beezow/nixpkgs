@@ -6,20 +6,22 @@
 , poetry-core
 , pytest-aiohttp
 , pytestCheckHook
-, pythonAtLeast
+, pythonOlder
 , zeroconf
 }:
 
 buildPythonPackage rec {
   pname = "aiohomekit";
-  version = "0.6.3";
+  version = "0.7.16";
   format = "pyproject";
+
+  disabled = pythonOlder "3.7";
 
   src = fetchFromGitHub {
     owner = "Jc2k";
     repo = pname;
     rev = version;
-    sha256 = "sha256-XBinbhYUB9BuQxxmWfZUw276uNam4DgBpiCAjT7KDlg=";
+    sha256 = "sha256-dakxPhnI1m6KiOj6oQkfQ0UVA7NEBTHFGYnF6L6c8Ck=";
   };
 
   nativeBuildInputs = [
@@ -32,6 +34,8 @@ buildPythonPackage rec {
     zeroconf
   ];
 
+  doCheck = lib.versionAtLeast pytest-aiohttp.version "1.0.0";
+
   checkInputs = [
     pytest-aiohttp
     pytestCheckHook
@@ -42,7 +46,9 @@ buildPythonPackage rec {
     "tests/test_ip_pairing.py"
   ];
 
-  pythonImportsCheck = [ "aiohomekit" ];
+  pythonImportsCheck = [
+    "aiohomekit"
+  ];
 
   meta = with lib; {
     description = "Python module that implements the HomeKit protocol";

@@ -18,6 +18,7 @@ with lib;
       package = mkOption {
         type = types.package;
         default = pkgs.xmrig;
+        defaultText = literalExpression "pkgs.xmrig";
         example = literalExpression "pkgs.xmrig-mo";
         description = "XMRig package to use.";
       };
@@ -51,6 +52,8 @@ with lib;
   };
 
   config = mkIf cfg.enable {
+    boot.kernelModules = [ "msr" ];
+
     systemd.services.xmrig = {
       wantedBy = [ "multi-user.target" ];
       after = [ "network.target" ];
@@ -58,14 +61,16 @@ with lib;
       serviceConfig = {
         ExecStartPre = "${cfg.package}/bin/xmrig --config=${configFile} --dry-run";
         ExecStart = "${cfg.package}/bin/xmrig --config=${configFile}";
-        DynamicUser = true;
+        # https://xmrig.com/docs/miner/randomx-optimization-guide/msr
+        # If you use recent XMRig with root privileges (Linux) or admin
+        # privileges (Windows) the miner configure all MSR registers
+        # automatically.
+        DynamicUser = lib.mkDefault false;
       };
     };
   };
 
   meta = with lib; {
-    description = "XMRig Mining Software Service";
-    license = licenses.gpl3Only;
     maintainers = with maintainers; [ ratsclub ];
   };
 }

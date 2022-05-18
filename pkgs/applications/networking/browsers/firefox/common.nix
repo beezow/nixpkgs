@@ -1,20 +1,23 @@
 { pname, version, meta, updateScript ? null
 , binaryName ? "firefox", application ? "browser"
 , src, unpackPhase ? null, patches ? []
-, extraNativeBuildInputs ? [], extraConfigureFlags ? [], extraMakeFlags ? [], tests ? [] }:
+, extraNativeBuildInputs ? [], extraConfigureFlags ? [], extraMakeFlags ? [], tests ? []
+, extraPostPatch ? "", extraPassthru ? {} }:
 
 { lib, stdenv, pkg-config, pango, perl, python3, zip
 , libjpeg, zlib, dbus, dbus-glib, bzip2, xorg
 , freetype, fontconfig, file, nspr, nss
 , yasm, libGLU, libGL, sqlite, unzip, makeWrapper
 , hunspell, libevent, libstartup_notification
-, libvpx_1_8
-, icu69, libpng, glib, pciutils
-, autoconf213, which, gnused, rustPackages
+, libvpx
+, icu70, libpng, glib, pciutils
+, autoconf213, which, gnused, rustPackages, rustPlatform
 , rust-cbindgen, nodejs, nasm, fetchpatch
 , gnum4
 , gtk3, wrapGAppsHook
+, pkgsCross
 , debugBuild ? false
+, runCommand
 
 ### optionals
 
@@ -27,6 +30,7 @@
 , ltoSupport ? (stdenv.isLinux && stdenv.is64bit), overrideCC, buildPackages
 , gssSupport ? true, libkrb5
 , pipewireSupport ? waylandSupport && webrtcSupport, pipewire
+# Jemalloc could reduce memory consumption.
 , jemallocSupport ? true, jemalloc
 
 ## privacy-related options
@@ -71,6 +75,9 @@
 # > the experience of Firefox users, you won't have any issues using the
 # > official branding.
 , enableOfficialBranding ? true
+
+# On 32bit platforms, we disable adding "-g" for easier linking.
+, enableDebugSymbols ? !stdenv.is32bit
 }:
 
 assert stdenv.cc.libc or null != null;
@@ -110,15 +117,21 @@ let
   # When LTO for Darwin is fixed, the following will need updating as lld
   # doesn't work on it. For now it is fine since ltoSupport implies no Darwin.
   buildStdenv = if ltoSupport
-                then overrideCC stdenv llvmPackages.clangUseLLVM
+                # LTO requires LLVM bintools including ld.lld and llvm-ar.
+                then overrideCC llvmPackages.stdenv (llvmPackages.stdenv.cc.override {
+                  inherit (llvmPackages) bintools;
+                })
                 else stdenv;
 
-  # --enable-release adds -ffunction-sections & LTO that require a big amount of
-  # RAM and the 32-bit memory space cannot handle that linking
-  # We also disable adding "-g" for easier linking
-  releaseFlags = if stdenv.is32bit
-                 then [ "--disable-release" "--disable-debug-symbols" ]
-                 else [ "--enable-release" ];
+  # Compile the wasm32 sysroot to build the RLBox Sandbox
+  # https://hacks.mozilla.org/2021/12/webassembly-and-back-again-fine-grained-sandboxing-in-firefox-95/
+  # We only link c++ libs here, our compiler wrapper can find wasi libc and crt itself.
+  wasiSysRoot = runCommand "wasi-sysroot" {} ''
+    mkdir -p $out/lib/wasm32-wasi
+    for lib in ${pkgsCross.wasi32.llvmPackages.libcxx}/lib/* ${pkgsCross.wasi32.llvmPackages.libcxxabi}/lib/*; do
+      ln -s $lib $out/lib/wasm32-wasi
+    done
+  '';
 in
 
 buildStdenv.mkDerivation ({
@@ -130,7 +143,9 @@ buildStdenv.mkDerivation ({
   patches = [
   ] ++
   lib.optional (lib.versionAtLeast version "86") ./env_var_for_system_dir-ff86.patch ++
-  lib.optional (lib.versionAtLeast version "90") ./no-buildconfig-ffx90.patch ++
+  lib.optional (lib.versionAtLeast version "90" && lib.versionOlder version "95") ./no-buildconfig-ffx90.patch ++
+  lib.optional (lib.versionAtLeast version "96") ./no-buildconfig-ffx96.patch ++
+
   patches;
 
   # Ignore trivial whitespace changes in patches, this fixes compatibility of
@@ -146,9 +161,10 @@ buildStdenv.mkDerivation ({
     xorg.xorgproto
     xorg.libXdamage
     xorg.libXext
+    xorg.libXtst
     libevent libstartup_notification /* cairo */
     libpng glib
-    nasm icu69 libvpx_1_8
+    nasm icu70 libvpx
     # >= 66 requires nasm for the AV1 lib dav1d
     # yasm can potentially be removed in future versions
     # https://bugzilla.mozilla.org/show_bug.cgi?id=1501796
@@ -165,17 +181,15 @@ buildStdenv.mkDerivation ({
                                           AVFoundation MediaToolbox CoreLocation
                                           Foundation libobjc AddressBook cups ];
 
-  NIX_LDFLAGS = lib.optionalString ltoSupport ''
-    -rpath ${llvmPackages.libunwind.out}/lib
-  '';
-
   MACH_USE_SYSTEM_PYTHON = "1";
 
   postPatch = ''
     rm -rf obj-x86_64-pc-linux-gnu
     substituteInPlace toolkit/xre/glxtest.cpp \
       --replace 'dlopen("libpci.so' 'dlopen("${pciutils}/lib/libpci.so'
- '';
+
+    patchShebangs mach
+  '' + extraPostPatch;
 
   nativeBuildInputs =
     [
@@ -193,9 +207,13 @@ buildStdenv.mkDerivation ({
       which
       unzip
       wrapGAppsHook
+      rustPlatform.bindgenHook
     ]
     ++ lib.optionals buildStdenv.isDarwin [ xcbuild rsync ]
     ++ extraNativeBuildInputs;
+
+  separateDebugInfo = enableDebugSymbols;
+  setOutputFlags = false; # `./mach configure` doesn't understand `--*dir=` flags.
 
   preConfigure = ''
     # remove distributed configuration files
@@ -204,25 +222,13 @@ buildStdenv.mkDerivation ({
     rm -f .mozconfig*
     # this will run autoconf213
     configureScript="$(realpath ./mach) configure"
-    export MOZCONFIG=$(pwd)/mozconfig
     export MOZBUILD_STATE_PATH=$(pwd)/mozbuild
 
-    # Set C flags for Rust's bindgen program. Unlike ordinary C
-    # compilation, bindgen does not invoke $CC directly. Instead it
-    # uses LLVM's libclang. To make sure all necessary flags are
-    # included we need to look in a few places.
-    # TODO: generalize this process for other use-cases.
-
-    BINDGEN_CFLAGS="$(< ${buildStdenv.cc}/nix-support/libc-crt1-cflags) \
-      $(< ${buildStdenv.cc}/nix-support/libc-cflags) \
-      $(< ${buildStdenv.cc}/nix-support/cc-cflags) \
-      $(< ${buildStdenv.cc}/nix-support/libcxx-cxxflags) \
-      ${lib.optionalString buildStdenv.cc.isClang "-idirafter ${buildStdenv.cc.cc.lib}/lib/clang/${lib.getVersion buildStdenv.cc.cc}/include"} \
-      ${lib.optionalString buildStdenv.cc.isGNU "-isystem ${lib.getDev buildStdenv.cc.cc}/include/c++/${lib.getVersion buildStdenv.cc.cc} -isystem ${buildStdenv.cc.cc}/include/c++/${lib.getVersion buildStdenv.cc.cc}/${buildStdenv.hostPlatform.config}"} \
-      $NIX_CFLAGS_COMPILE"
-
-    echo "ac_add_options BINDGEN_CFLAGS='$BINDGEN_CFLAGS'" >> $MOZCONFIG
-  '' + (lib.optionalString googleAPISupport ''
+  '' + (lib.optionalString (lib.versionAtLeast version "95.0") ''
+    # RBox WASM Sandboxing
+    export WASM_CC=${pkgsCross.wasi32.stdenv.cc}/bin/${pkgsCross.wasi32.stdenv.cc.targetPrefix}cc
+    export WASM_CXX=${pkgsCross.wasi32.stdenv.cc}/bin/${pkgsCross.wasi32.stdenv.cc.targetPrefix}c++
+  '') + (lib.optionalString googleAPISupport ''
     # Google API key used by Chromium and Firefox.
     # Note: These are for NixOS/nixpkgs use ONLY. For your own distribution,
     # please get your own set of keys.
@@ -264,9 +270,10 @@ buildStdenv.mkDerivation ({
   #   https://bugzilla.mozilla.org/show_bug.cgi?id=1538724
   # elf-hack is broken when using clang+lld:
   #   https://bugzilla.mozilla.org/show_bug.cgi?id=1482204
-  ++ lib.optional ltoSupport "--enable-lto"
+  ++ lib.optional ltoSupport "--enable-lto=cross" # Cross-language LTO.
   ++ lib.optional (ltoSupport && (buildStdenv.isAarch32 || buildStdenv.isi686 || buildStdenv.isx86_64)) "--disable-elf-hack"
   ++ lib.optional (ltoSupport && !buildStdenv.isDarwin) "--enable-linker=lld"
+  ++ lib.optional (lib.versionAtLeast version "95") "--with-wasi-sysroot=${wasiSysRoot}"
 
   ++ flag alsaSupport "alsa"
   ++ flag pulseaudioSupport "pulseaudio"
@@ -278,9 +285,13 @@ buildStdenv.mkDerivation ({
   ++ lib.optional drmSupport "--enable-eme=widevine"
 
   ++ (if debugBuild then [ "--enable-debug" "--enable-profiling" ]
-                    else ([ "--disable-debug"
-                           "--enable-optimize"
-                           "--enable-strip" ] ++ releaseFlags))
+                    else [ "--disable-debug" "--enable-optimize" ])
+  # --enable-release adds -ffunction-sections & LTO that require a big amount of
+  # RAM and the 32-bit memory space cannot handle that linking
+  ++ flag (!debugBuild && !stdenv.is32bit) "release"
+  ++ flag enableDebugSymbols "debug-symbols"
+  ++ lib.optionals enableDebugSymbols [ "--disable-strip" "--disable-install-strip" ]
+
   ++ lib.optional enableOfficialBranding "--enable-official-branding"
   ++ extraConfigureFlags;
 
@@ -288,14 +299,7 @@ buildStdenv.mkDerivation ({
     cd obj-*
   '';
 
-  makeFlags = lib.optionals ltoSupport [
-    "AR=${buildStdenv.cc.bintools.bintools}/bin/llvm-ar"
-    "LLVM_OBJDUMP=${buildStdenv.cc.bintools.bintools}/bin/llvm-objdump"
-    "NM=${buildStdenv.cc.bintools.bintools}/bin/llvm-nm"
-    "RANLIB=${buildStdenv.cc.bintools.bintools}/bin/llvm-ranlib"
-    "STRIP=${buildStdenv.cc.bintools.bintools}/bin/llvm-strip"
-  ]
-  ++ extraMakeFlags;
+  makeFlags = extraMakeFlags;
 
   enableParallelBuilding = true;
   doCheck = false; # "--disable-tests" above
@@ -311,6 +315,42 @@ buildStdenv.mkDerivation ({
 
     # Needed to find Mozilla runtime
     gappsWrapperArgs+=(--argv0 "$out/bin/.${binaryName}-wrapped")
+  '';
+
+  # Workaround: The separateDebugInfo hook skips artifacts whose build ID's length is not 40.
+  # But we got 16-length build ID here. The function body is mainly copied from pkgs/build-support/setup-hooks/separate-debug-info.sh
+  # Remove it when PR #146275 is merged.
+  preFixup = lib.optionalString enableDebugSymbols ''
+    _separateDebugInfo() {
+        [ -e "$prefix" ] || return 0
+
+        local dst="''${debug:-$out}"
+        if [ "$prefix" = "$dst" ]; then return 0; fi
+
+        dst="$dst/lib/debug/.build-id"
+
+        # Find executables and dynamic libraries.
+        local i
+        while IFS= read -r -d $'\0' i; do
+            if ! isELF "$i"; then continue; fi
+
+            # Extract the Build ID. FIXME: there's probably a cleaner way.
+            local id="$($READELF -n "$i" | sed 's/.*Build ID: \([0-9a-f]*\).*/\1/; t; d')"
+            if [[ -z "$id" ]]; then
+                echo "could not find build ID of $i, skipping" >&2
+                continue
+            fi
+
+            # Extract the debug info.
+            header "separating debug info from $i (build ID $id)"
+            mkdir -p "$dst/''${id:0:2}"
+            $OBJCOPY --only-keep-debug "$i" "$dst/''${id:0:2}/''${id:2}.debug"
+            $STRIP --strip-debug "$i"
+
+            # Also a create a symlink <original-name>.debug.
+            ln -sfn ".build-id/''${id:0:2}/''${id:2}.debug" "$dst/../$(basename "$i")"
+        done < <(find "$prefix" -type f -print0)
+    }
   '';
 
   doInstallCheck = true;
@@ -331,7 +371,8 @@ buildStdenv.mkDerivation ({
     inherit applicationName;
     inherit tests;
     inherit gtk3;
-  };
+    inherit wasiSysRoot;
+  } // extraPassthru;
 
   hardeningDisable = [ "format" ]; # -Werror=format-security
 

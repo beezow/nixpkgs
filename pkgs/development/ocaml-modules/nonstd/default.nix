@@ -4,7 +4,9 @@ buildDunePackage rec {
   pname = "nonstd";
   version = "0.0.3";
 
-  minimumOCamlVersion = "4.02";
+  useDune2 = false;
+
+  minimalOCamlVersion = "4.02";
 
   src = fetchzip {
     url = "https://bitbucket.org/smondet/${pname}/get/${pname}.${version}.tar.gz";
@@ -14,7 +16,7 @@ buildDunePackage rec {
   doCheck = true;
 
   meta = with lib; {
-    homepage = https://bitbucket.org/smondet/nonstd;
+    homepage = "https://bitbucket.org/smondet/nonstd";
     description = "Non-standard mini-library";
     license = licenses.isc;
     maintainers = [ maintainers.alexfmpe ];

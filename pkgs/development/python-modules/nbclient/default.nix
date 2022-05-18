@@ -6,12 +6,12 @@
 
 buildPythonPackage rec {
   pname = "nbclient";
-  version = "0.5.4";
-  disabled = pythonOlder "3.6";
+  version = "0.5.10";
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "6c8ad36a28edad4562580847f9f1636fe5316a51a323ed85a24a4ad37d4aefce";
+    sha256 = "b5fdea88d6fa52ca38de6c2361401cfe7aaa7cd24c74effc5e489cec04d79088";
   };
 
   inherit doCheck;
@@ -22,5 +22,6 @@ buildPythonPackage rec {
     homepage = "https://github.com/jupyter/nbclient";
     description = "A client library for executing notebooks";
     license = licenses.bsd3;
+    maintainers = [ maintainers.erictapen ];
   };
 }

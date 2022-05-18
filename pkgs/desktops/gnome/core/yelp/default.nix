@@ -2,7 +2,7 @@
 , stdenv
 , gettext
 , fetchurl
-, webkitgtk_4_1
+, webkitgtk
 , pkg-config
 , gtk3
 , glib
@@ -17,11 +17,11 @@
 
 stdenv.mkDerivation rec {
   pname = "yelp";
-  version = "41.1";
+  version = "41.2";
 
   src = fetchurl {
     url = "mirror://gnome/sources/yelp/${lib.versions.major version}/${pname}-${version}.tar.xz";
-    sha256 = "sha256-RWpkFWR7zusBWbkLNVP/MocozymmCPzggCQjJQTMuHQ=";
+    sha256 = "sha256-sAvwM/At15ttPyVQMccd+NbtOOVSyHC485GjdHJMQ8U=";
   };
 
   nativeBuildInputs = [
@@ -34,7 +34,7 @@ stdenv.mkDerivation rec {
   buildInputs = [
     gtk3
     glib
-    webkitgtk_4_1
+    webkitgtk
     sqlite
     libxml2
     libxslt
@@ -43,6 +43,10 @@ stdenv.mkDerivation rec {
     gst_all_1.gst-plugins-base
     gst_all_1.gst-plugins-good
   ];
+
+  # To reduce the GNOME ISO closure size.  Remove when other packages
+  # are using webkit2gtk_4_1.
+  configureFlags = ["--with-webkit2gtk-4-0"];
 
   passthru = {
     updateScript = gnome.updateScript {

@@ -13,12 +13,12 @@
 
 buildPythonPackage rec {
   pname = "statsmodels";
-  version = "0.13.0";
+  version = "0.13.2";
   disabled = isPy27;
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "f2efc02011b7240a9e851acd76ab81150a07d35c97021cb0517887539a328f8a";
+    sha256 = "sha256-d9wpLJk5wDakdvF3D50Il2sFQ32qIpko2nMjEUfN59Q=";
   };
 
   nativeBuildInputs = [ cython ];

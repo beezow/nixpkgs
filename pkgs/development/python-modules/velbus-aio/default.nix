@@ -3,13 +3,15 @@
 , buildPythonPackage
 , fetchFromGitHub
 , pythonOlder
+, pyserial
 , pyserial-asyncio
 , pytestCheckHook
 }:
 
 buildPythonPackage rec {
   pname = "velbus-aio";
-  version = "2021.11.0";
+  version = "2022.2.4";
+  format = "setuptools";
 
   disabled = pythonOlder "3.7";
 
@@ -17,11 +19,13 @@ buildPythonPackage rec {
     owner = "Cereal2nd";
     repo = pname;
     rev = version;
-    sha256 = "sha256-4N1wamy0nqAmVezOd3kBicUAZXRob8gNA89N3fY1Y7o=";
+    sha256 = "sha256-oWHyEw1DjMynLPAARcVaqsFccpnTk1/7gpq+8TU95d0=";
+    fetchSubmodules = true;
   };
 
   propagatedBuildInputs = [
     backoff
+    pyserial
     pyserial-asyncio
   ];
 

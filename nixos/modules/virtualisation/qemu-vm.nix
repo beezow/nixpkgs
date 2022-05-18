@@ -97,7 +97,7 @@ let
     imap1 (idx: drive: drive // { device = driveDeviceName idx; });
 
   efiPrefix =
-    if (pkgs.stdenv.isi686 || pkgs.stdenv.isx86_64) then "${pkgs.OVMF.fd}/FV/OVMF"
+    if pkgs.stdenv.hostPlatform.isx86 then "${pkgs.OVMF.fd}/FV/OVMF"
     else if pkgs.stdenv.isAarch64 then "${pkgs.OVMF.fd}/FV/AAVMF"
     else throw "No EFI firmware available for platform";
   efiFirmware = "${efiPrefix}_CODE.fd";
@@ -296,7 +296,7 @@ in
     virtualisation.memorySize =
       mkOption {
         type = types.ints.positive;
-        default = 384;
+        default = 1024;
         description =
           ''
             The memory size in megabytes of the virtual machine.
@@ -318,7 +318,7 @@ in
     virtualisation.diskSize =
       mkOption {
         type = types.nullOr types.ints.positive;
-        default = 512;
+        default = 1024;
         description =
           ''
             The disk size in megabytes of the virtual machine.
@@ -329,6 +329,7 @@ in
       mkOption {
         type = types.str;
         default = "./${config.system.name}.qcow2";
+        defaultText = literalExpression ''"./''${config.system.name}.qcow2"'';
         description =
           ''
             Path to the disk image containing the root filesystem.
@@ -631,6 +632,15 @@ in
             Enable the Qemu guest agent.
           '';
         };
+
+      virtioKeyboard =
+        mkOption {
+          type = types.bool;
+          default = true;
+          description = ''
+            Enable the virtio-keyboard device.
+          '';
+        };
     };
 
     virtualisation.useNixStoreImage =
@@ -678,6 +688,7 @@ in
       mkOption {
         type = types.str;
         default = "./${config.system.name}-efi-vars.fd";
+        defaultText = literalExpression ''"./''${config.system.name}-efi-vars.fd"'';
         description =
           ''
             Path to nvram image containing UEFI variables.  The will be created
@@ -833,7 +844,10 @@ in
 
     # FIXME: Consolidate this one day.
     virtualisation.qemu.options = mkMerge [
-      (mkIf (pkgs.stdenv.isi686 || pkgs.stdenv.isx86_64) [
+      (mkIf cfg.qemu.virtioKeyboard [
+        "-device virtio-keyboard"
+      ])
+      (mkIf pkgs.stdenv.hostPlatform.isx86 [
         "-usb" "-device usb-tablet,bus=usb-bus.0"
       ])
       (mkIf (pkgs.stdenv.isAarch32 || pkgs.stdenv.isAarch64) [
@@ -845,7 +859,7 @@ in
         ''-append "$(cat ${config.system.build.toplevel}/kernel-params) init=${config.system.build.toplevel}/init regInfo=${regInfo}/registration ${consoles} $QEMU_KERNEL_PARAMS"''
       ])
       (mkIf cfg.useEFIBoot [
-        "-drive if=pflash,format=raw,unit=0,readonly,file=${efiFirmware}"
+        "-drive if=pflash,format=raw,unit=0,readonly=on,file=${efiFirmware}"
         "-drive if=pflash,format=raw,unit=1,file=$NIX_EFI_VARS"
       ])
       (mkIf (cfg.bios != null) [
@@ -996,4 +1010,7 @@ in
       ];
 
   };
+
+  # uses types of services/x11/xserver.nix
+  meta.buildDocsInSandbox = false;
 }

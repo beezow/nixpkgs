@@ -9,13 +9,14 @@
 
 buildPythonPackage rec {
   pname = "sense-energy";
-  version = "0.9.2";
+  version = "0.10.2";
+  format = "setuptools";
 
   src = fetchFromGitHub {
     owner = "scottbonline";
     repo = "sense";
     rev = version;
-    sha256 = "sha256-XZvx/GWpz49dsiY9pgMfX+6gUfWA8q6IpnzmCRPFHus=";
+    hash = "sha256-0D0AagmLozF5nLbdcmtE9q65vG2WxWv+hZLTnjmmfEY=";
   };
 
   propagatedBuildInputs = [
@@ -28,7 +29,9 @@ buildPythonPackage rec {
   # no tests implemented
   doCheck = false;
 
-  pythonImportsCheck = [ "sense_energy" ];
+  pythonImportsCheck = [
+    "sense_energy"
+  ];
 
   meta = with lib; {
     description = "API for the Sense Energy Monitor";

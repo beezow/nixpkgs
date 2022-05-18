@@ -1,33 +1,40 @@
 { lib
 , buildPythonPackage
 , fetchPypi
-, sqlalchemy
 , boto3
 , botocore
 , pandas
 , tenacity
+, pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "pyathena";
-  version = "2.3.0";
+  version = "2.5.1";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.7";
 
   src = fetchPypi {
     pname = "PyAthena";
     inherit version;
-    sha256 = "08fl653yayvqi991zvcai5ifcxwy9ip6xh0cr3lbimggjnjgwsl5";
+    sha256 = "sha256-GTcDiDtZGgTpdl6YBgPuztv7heEPZ/ymhup/4JwfELA=";
   };
-
-  # Nearly all tests depend on a working AWS Athena instance,
-  # therefore deactivating them.
-  # https://github.com/laughingman7743/PyAthena/#testing
-  doCheck = false;
 
   propagatedBuildInputs = [
     boto3
     botocore
     pandas
     tenacity
+  ];
+
+  # Nearly all tests depend on a working AWS Athena instance,
+  # therefore deactivating them.
+  # https://github.com/laughingman7743/PyAthena/#testing
+  doCheck = false;
+
+  pythonImportsCheck = [
+    "pyathena"
   ];
 
   meta = with lib; {

@@ -15,7 +15,7 @@
 , enableCairo ? true
 , withPNGBackend ? "libpng"
 , withSVGBackend ? "librsvg"
-# Optional dependencies
+  # Optional dependencies
 , cairo
 , librsvg
 , libpng
@@ -23,14 +23,14 @@
 
 stdenv.mkDerivation rec {
   pname = "fuzzel";
-  version = "1.6.4";
+  version = "1.7.0";
 
   src = fetchFromGitea {
     domain = "codeberg.org";
     owner = "dnkl";
     repo = "fuzzel";
     rev = version;
-    sha256 = "sha256-wl3dO6EwLXWf0XtAIml1NlNRIvpIQJuq1pxLmo/pAUE=";
+    sha256 = "1261gwxiky37pvzmmbrpml1psa22kkglb141ybj1fbnwg6j7jvlf";
   };
 
   nativeBuildInputs = [
@@ -49,8 +49,8 @@ stdenv.mkDerivation rec {
     tllist
     fcft
   ] ++ lib.optional enableCairo cairo
-    ++ lib.optional (withPNGBackend == "libpng") libpng
-    ++ lib.optional (withSVGBackend == "librsvg") librsvg;
+  ++ lib.optional (withPNGBackend == "libpng") libpng
+  ++ lib.optional (withSVGBackend == "librsvg") librsvg;
 
   mesonBuildType = "release";
 

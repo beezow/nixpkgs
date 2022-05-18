@@ -4,20 +4,18 @@ let
     let cpuName = platform.parsed.cpu.name; in {
       "aarch64" = "arm64";
       "armv7l" = "armhf";
+      "armv6l" = "armhf";
     }.${cpuName} or cpuName;
 in
 buildGoModule rec {
   pname = "faas-cli";
-  # When updating version change rev.
-  version = "0.13.13";
-  rev = "72816d486cf76c3089b915dfb0b66b85cf096634";
-  platform = faasPlatform stdenv.targetPlatform;
+  version = "0.14.3";
 
   src = fetchFromGitHub {
     owner = "openfaas";
     repo = "faas-cli";
     rev = version;
-    sha256 = "0mmrakyy2qmkldld7pxf5bx6whdadq2r52b68f9p9z7yqrdimix8";
+    sha256 = "sha256-1aflQXfW/y31Dk0OZW77qNQKEwkhi6p8ZBfTUyRDbdo=";
   };
 
   CGO_ENABLED = 0;
@@ -28,9 +26,9 @@ buildGoModule rec {
 
   ldflags = [
     "-s" "-w"
-    "-X github.com/openfaas/faas-cli/version.GitCommit=${rev}"
+    "-X github.com/openfaas/faas-cli/version.GitCommit=ref/tags/${version}"
     "-X github.com/openfaas/faas-cli/version.Version=${version}"
-    "-X github.com/openfaas/faas-cli/commands.Platform=${platform}"
+    "-X github.com/openfaas/faas-cli/commands.Platform=${faasPlatform stdenv.targetPlatform}"
   ];
 
   meta = with lib; {

@@ -36,7 +36,7 @@ in
 
     boot.kernelPackages = mkOption {
       default = pkgs.linuxPackages;
-      type = types.unspecified // { merge = mergeEqualOption; };
+      type = types.raw;
       apply = kernelPackages: kernelPackages.extend (self: super: {
         kernel = super.kernel.override (originalArgs: {
           inherit randstructSeed;
@@ -243,7 +243,7 @@ in
             "hid_generic" "hid_lenovo" "hid_apple" "hid_roccat"
             "hid_logitech_hidpp" "hid_logitech_dj" "hid_microsoft"
 
-          ] ++ optionals (pkgs.stdenv.isi686 || pkgs.stdenv.isx86_64) [
+          ] ++ optionals pkgs.stdenv.hostPlatform.isx86 [
             # Misc. x86 keyboard stuff.
             "pcips2" "atkbd" "i8042"
 

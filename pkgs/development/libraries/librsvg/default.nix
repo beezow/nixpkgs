@@ -14,6 +14,7 @@
 , libobjc
 , rustPlatform
 , rustc
+, rust
 , cargo
 , gnome
 , vala
@@ -24,13 +25,13 @@
 
 stdenv.mkDerivation rec {
   pname = "librsvg";
-  version = "2.52.0";
+  version = "2.52.6";
 
   outputs = [ "out" "dev" "installedTests" ];
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${lib.versions.majorMinor version}/${pname}-${version}.tar.xz";
-    sha256 = "14zkdd7a9mymnfs3laqj0gr69c16nwixvbc5a4gvd534w6riz0mx";
+    sha256 = "o/k5oeajpgQIJEYy0DI/jDsg60t7AAU24uW9k7jv+q0=";
   };
 
   cargoVendorDir = "vendor";
@@ -78,7 +79,8 @@ stdenv.mkDerivation rec {
 
     "--enable-installed-tests"
     "--enable-always-build-tests"
-  ] ++ lib.optional stdenv.isDarwin "--disable-Bsymbolic";
+  ] ++ lib.optional stdenv.isDarwin "--disable-Bsymbolic"
+    ++ lib.optional (stdenv.buildPlatform != stdenv.hostPlatform) "RUST_TARGET=${rust.toRustTarget stdenv.hostPlatform}";
 
   makeFlags = [
     "installed_test_metadir=${placeholder "installedTests"}/share/installed-tests/RSVG"
@@ -105,6 +107,9 @@ stdenv.mkDerivation rec {
     # Fix thumbnailer path
     sed -e "s#@bindir@\(/gdk-pixbuf-thumbnailer\)#${gdk-pixbuf}/bin\1#g" \
         -i gdk-pixbuf-loader/librsvg.thumbnailer.in
+
+    # 'error: linker `cc` not found' when cross-compiling
+    export RUSTFLAGS="-Clinker=$CC"
   '';
 
   # Not generated when cross compiling.

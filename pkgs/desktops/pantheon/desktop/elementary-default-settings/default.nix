@@ -2,7 +2,6 @@
 , stdenv
 , fetchFromGitHub
 , nix-update-script
-, pantheon
 , meson
 , ninja
 , nixos-artwork
@@ -18,11 +17,9 @@ stdenv.mkDerivation rec {
   pname = "elementary-default-settings";
   version = "6.0.2";
 
-  repoName = "default-settings";
-
   src = fetchFromGitHub {
     owner = "elementary";
-    repo = repoName;
+    repo = "default-settings";
     rev = version;
     sha256 = "sha256-qaPj/Qp7RYzHgElFdM8bHV42oiPUbCMTC9Q+MUj4Q6Y=";
   };
@@ -50,28 +47,19 @@ stdenv.mkDerivation rec {
   '';
 
   preInstall = ''
-    # Install our override for plank dockitems as Appcenter is not ready to be preinstalled.
-    # See: https://github.com/NixOS/nixpkgs/issues/70214.
+    # Install our override for plank dockitems as the desktop file path is different.
     schema_dir=$out/share/glib-2.0/schemas
     install -D ${./overrides/plank-dockitems.gschema.override} $schema_dir/plank-dockitems.gschema.override
 
     # Our launchers that use paths at /run/current-system/sw/bin
     mkdir -p $out/etc/skel/.config/plank/dock1
     cp -avr ${./launchers} $out/etc/skel/.config/plank/dock1/launchers
-
-    # Whitelist wingpanel indicators to be used in the greeter
-    # https://github.com/elementary/greeter/blob/fc19752f147c62767cd2097c0c0c0fcce41e5873/debian/io.elementary.greeter.whitelist
-    # wingpanel 2.3.2 renamed this to .allowed to .forbidden
-    # https://github.com/elementary/wingpanel/pull/326
-    install -D ${./io.elementary.greeter.allowed} $out/etc/wingpanel.d/io.elementary.greeter.allowed
   '';
 
   postFixup = ''
     # https://github.com/elementary/default-settings/issues/55
-    rm -rf $out/share/plymouth
-    rm -rf $out/share/cups
-
-    rm -rf $out/share/applications
+    rm -r $out/share/cups
+    rm -r $out/share/applications
   '';
 
   passthru = {

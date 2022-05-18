@@ -3,26 +3,28 @@
 , fetchFromGitHub
 , rustPlatform
 , installShellFiles
+, DiskArbitration
+, Foundation
 , libiconv
 , Security
 }:
 
 rustPlatform.buildRustPackage rec {
   pname = "delta";
-  version = "0.9.2";
+  version = "0.12.1";
 
   src = fetchFromGitHub {
     owner = "dandavison";
     repo = pname;
     rev = version;
-    sha256 = "sha256-DJG8C7oSTf4YKeSVytN4pVF4qVImg1bsTYbnfkR+U94=";
+    sha256 = "sha256-khW+Ri+MZytMZcd2tRXhc/D6kOOhk+LP6MsS+GijjQM=";
   };
 
-  cargoSha256 = "sha256-mweH+ZIcNGGmoGUhnmZzaB5y14eO/XkHqrL8Nz/b3Jg=";
+  cargoSha256 = "sha256-SD1y+l86wqlJUUaG4ae4PXXSMS+4CPth3F4pLYbXMVc=";
 
   nativeBuildInputs = [ installShellFiles ];
 
-  buildInputs = lib.optionals stdenv.isDarwin [ libiconv Security ];
+  buildInputs = lib.optionals stdenv.isDarwin [ DiskArbitration Foundation libiconv Security ];
 
   postInstall = ''
     installShellCompletion --bash --name delta.bash etc/completion/completion.bash
@@ -34,6 +36,6 @@ rustPlatform.buildRustPackage rec {
     description = "A syntax-highlighting pager for git";
     changelog = "https://github.com/dandavison/delta/releases/tag/${version}";
     license = licenses.mit;
-    maintainers = with maintainers; [ marsam zowoq ];
+    maintainers = with maintainers; [ marsam zowoq SuperSandro2000 ];
   };
 }

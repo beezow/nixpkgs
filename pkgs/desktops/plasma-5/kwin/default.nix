@@ -2,7 +2,7 @@
   mkDerivation, lib,
   extra-cmake-modules, kdoctools, fetchpatch,
 
-  epoxy, lcms2, libICE, libSM, libcap, libdrm, libinput, libxkbcommon, mesa,
+  libepoxy, lcms2, libICE, libSM, libcap, libdrm, libinput, libxkbcommon, mesa,
   pipewire, udev, wayland, xcb-util-cursor, xwayland,
 
   qtdeclarative, qtmultimedia, qtquickcontrols2, qtscript, qtsensors,
@@ -18,10 +18,10 @@
 # TODO (ttuegel): investigate qmlplugindump failure
 
 mkDerivation {
-  name = "kwin";
+  pname = "kwin";
   nativeBuildInputs = [ extra-cmake-modules kdoctools ];
   buildInputs = [
-    epoxy lcms2 libICE libSM libcap libdrm libinput libxkbcommon mesa pipewire
+    libepoxy lcms2 libICE libSM libcap libdrm libinput libxkbcommon mesa pipewire
     udev wayland xcb-util-cursor xwayland
 
     qtdeclarative qtmultimedia qtquickcontrols2 qtscript qtsensors
@@ -34,7 +34,7 @@ mkDerivation {
     plasma-framework libqaccessibilityclient
 
   ];
-  outputs = [ "dev" "out" ];
+  outputs = [ "out" "dev" ];
   patches = [
     ./0001-follow-symlinks.patch
     ./0002-xwayland.patch

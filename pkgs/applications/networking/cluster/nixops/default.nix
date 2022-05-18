@@ -18,12 +18,14 @@ let
 
             nixops = super.nixops.overridePythonAttrs (
               old: {
+                version = "${old.version}-pre-${lib.substring 0 7 super.nixops.src.rev or "dirty"}";
+
                 postPatch = ''
                   substituteInPlace nixops/args.py --subst-var version
                 '';
 
                 meta = old.meta // {
-                  homepage = https://github.com/NixOS/nixops;
+                  homepage = "https://github.com/NixOS/nixops";
                   description = "NixOS cloud provisioning and deployment tool";
                   maintainers = with lib.maintainers; [ adisbladis aminechikhaoui eelco rob domenkozar ];
                   platforms = lib.platforms.unix;
@@ -61,12 +63,14 @@ let
   ).python;
 
   pkg = interpreter.pkgs.nixops.withPlugins(ps: [
-    ps.nixops-encrypted-links
-    ps.nixops-hercules-ci
-    ps.nixops-virtd
     ps.nixops-aws
+    ps.nixops-digitalocean
+    ps.nixops-encrypted-links
     ps.nixops-gcp
+    ps.nixops-hercules-ci
+    ps.nixops-hetzner
     ps.nixopsvbox
+    ps.nixops-virtd
   ]) // rec {
     # Workaround for https://github.com/NixOS/nixpkgs/issues/119407
     # TODO after #1199407: Use .overrideAttrs(pkg: old: { passthru.tests = .....; })

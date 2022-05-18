@@ -10,15 +10,19 @@
 , proto-plus
 , pytest-asyncio
 , mock
+, pythonOlder
 }:
 
 buildPythonPackage rec {
   pname = "google-cloud-automl";
-  version = "2.5.1";
+  version = "2.7.2";
+  format = "setuptools";
+
+  disabled = pythonOlder "3.6";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "3bc287ceff1cabe34bf805cfc62480507c47f35a60d90a3a8478884c0db3a32a";
+    hash = "sha256-CUsLMX0zRONChgzejZnBztth5ORMZyb6rj6mok2pMMU=";
   };
 
   propagatedBuildInputs = [

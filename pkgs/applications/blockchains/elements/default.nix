@@ -1,6 +1,6 @@
 { lib
 , stdenv
-, fetchurl
+, fetchFromGitHub
 , autoreconfHook
 , pkg-config
 , util-linux
@@ -24,11 +24,13 @@
 with lib;
 stdenv.mkDerivation rec {
   pname = if withGui then "elements" else "elementsd";
-  version = "0.21.0";
+  version = "0.21.0.2";
 
-  src = fetchurl {
-    url = "https://github.com/ElementsProject/elements/archive/elements-${version}.tar.gz";
-    sha256 = "0d9mcb0nw9qqhv0jhpddi9i4iry3w7b5jifsl5kpcw82qrkvgfgj";
+  src = fetchFromGitHub {
+    owner = "ElementsProject";
+    repo = "elements";
+    rev = "elements-${version}";
+    sha256 = "sha256-5b3wylp9Z2U0ueu2gI9jGeWiiJoddjcjQ/6zkFATyvA=";
   };
 
   nativeBuildInputs =

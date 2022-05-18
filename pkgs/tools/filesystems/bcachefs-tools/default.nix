@@ -22,23 +22,24 @@
 
 stdenv.mkDerivation {
   pname = "bcachefs-tools";
-  version = "unstable-2021-07-08";
+  version = "unstable-2022-03-09";
 
   src = fetchFromGitHub {
     owner = "koverstreet";
     repo = "bcachefs-tools";
-    rev = "050d5f7bcf08bd02f5077a1c5559f352fa449e1e";
-    sha256 = "15bl9ni0ckmvs5d7hi6v26z690rrmkb7dx00skn6gwq87ffz3imw";
+    rev = "3e2e3d468eed1d5ebbb4c6309d2eaebd081912c5";
+    sha256 = "1sb0dj2whlp3dxgf642z7yx7s8va5ah82zi6r4qni7l64qy1n554";
   };
 
   postPatch = ''
+    patchShebangs .
     substituteInPlace Makefile \
       --replace "pytest-3" "pytest --verbose" \
       --replace "INITRAMFS_DIR=/etc/initramfs-tools" \
                 "INITRAMFS_DIR=${placeholder "out"}/etc/initramfs-tools"
   '';
 
-  nativeBuildInputs = [ pkg-config docutils ];
+  nativeBuildInputs = [ pkg-config docutils python3Packages.python ];
 
   buildInputs = [
     libuuid libscrypt libsodium keyutils liburcu zlib libaio
@@ -59,11 +60,13 @@ stdenv.mkDerivation {
     smoke-test = nixosTests.bcachefs;
   };
 
+  enableParallelBuilding = true;
+
   meta = with lib; {
     description = "Tool for managing bcachefs filesystems";
     homepage = "https://bcachefs.org/";
     license = licenses.gpl2;
-    maintainers = with maintainers; [ davidak chiiruno ];
-    platforms = [ "x86_64-linux" ]; # does not build on aarch64, see https://github.com/koverstreet/bcachefs-tools/issues/39
+    maintainers = with maintainers; [ davidak Madouura ];
+    platforms = platforms.linux;
   };
 }

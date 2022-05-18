@@ -1,7 +1,7 @@
 { lib, stdenv, targetPackages
 
 # Build time
-, fetchurl, pkg-config, perl, texinfo, setupDebugInfoDirs, buildPackages
+, fetchurl, fetchpatch, pkg-config, perl, texinfo, setupDebugInfoDirs, buildPackages
 
 # Run time
 , ncurses, readline, gmp, mpfr, expat, libipt, zlib, dejagnu, sourceHighlight
@@ -27,11 +27,11 @@ assert pythonSupport -> python3 != null;
 
 stdenv.mkDerivation rec {
   pname = targetPrefix + basename;
-  version = "11.1";
+  version = "11.2";
 
   src = fetchurl {
     url = "mirror://gnu/gdb/${basename}-${version}.tar.xz";
-    sha256 = "151z6d0265hv9cgx9zqqa4bd6vbp20hrljhd6bxl7lr0gd0crkyc";
+    hash = "sha256-FJfDanGIG4ZxqahKDuQPqreIyjDXuhnYRjw8x4cVLjI=";
   };
 
   postPatch = if stdenv.isDarwin then ''
@@ -41,6 +41,13 @@ stdenv.mkDerivation rec {
 
   patches = [
     ./debug-info-from-env.patch
+
+    # Pull upstream fix for gcc-12. Will be included in gdb-12.
+    (fetchpatch {
+      name = "gcc-12.patch";
+      url = "https://sourceware.org/git/?p=binutils-gdb.git;a=patch;h=e97436b1b789dcdb6ffb502263f4c86f8bc22996";
+      sha256 = "1mpgw6s9qgnwhwyg3hagc6vhqhvia0l1s8nr22bcahwqxi3wvzcw";
+    })
   ] ++ lib.optionals stdenv.isDarwin [
     ./darwin-target-match.patch
   ];

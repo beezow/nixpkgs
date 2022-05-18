@@ -1,9 +1,9 @@
-{ pkgs, nodejs, stdenv, applyPatches, fetchFromGitHub, fetchpatch, fetchurl }:
+{ pkgs, nodejs, stdenv, applyPatches, fetchFromGitHub, fetchpatch, fetchurl, nixosTests }:
 
 let
   inherit (pkgs) lib;
-  since = (version: pkgs.lib.versionAtLeast nodejs.version version);
-  before = (version: pkgs.lib.versionOlder nodejs.version version);
+  since = version: pkgs.lib.versionAtLeast nodejs.version version;
+  before = version: pkgs.lib.versionOlder nodejs.version version;
   super = import ./composition.nix {
     inherit pkgs nodejs;
     inherit (stdenv.hostPlatform) system;
@@ -47,7 +47,7 @@ let
       '';
     };
 
-    carbon-now-cli = super.carbon-now-cli.override ({
+    carbon-now-cli = super.carbon-now-cli.override {
       nativeBuildInputs = [ pkgs.makeWrapper ];
       prePatch = ''
         export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
@@ -56,13 +56,13 @@ let
         wrapProgram $out/bin/carbon-now \
           --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium.outPath}/bin/chromium
       '';
-    });
+    };
 
     deltachat-desktop = super."deltachat-desktop-../../applications/networking/instant-messengers/deltachat-desktop".override {
       meta.broken = true; # use the top-level package instead
     };
 
-    fast-cli = super.fast-cli.override ({
+    fast-cli = super.fast-cli.override {
       nativeBuildInputs = [ pkgs.makeWrapper ];
       prePatch = ''
         export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
@@ -71,7 +71,7 @@ let
         wrapProgram $out/bin/fast \
           --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium.outPath}/bin/chromium
       '';
-    });
+    };
 
     hyperspace-cli = super."@hyperspace/cli".override {
       nativeBuildInputs = with pkgs; [
@@ -127,7 +127,15 @@ let
     # ../../applications/video/epgstation
     epgstation = super."epgstation-../../applications/video/epgstation".override (drv: {
       meta = drv.meta // {
-        broken = true; # not really broken, see the comment above
+        platforms = pkgs.lib.platforms.none;
+      };
+    });
+
+    # NOTE: this is a stub package to fetch npm dependencies for
+    # ../../applications/video/epgstation/client
+    epgstation-client = super."epgstation-client-../../applications/video/epgstation/client".override (drv: {
+      meta = drv.meta // {
+        platforms = pkgs.lib.platforms.none;
       };
     });
 
@@ -199,6 +207,19 @@ let
       '';
     };
 
+    manta = super.manta.override {
+      nativeBuildInputs = with pkgs; [ nodejs-14_x installShellFiles ];
+      postInstall = ''
+        # create completions, following upstream procedure https://github.com/joyent/node-manta/blob/v5.2.3/Makefile#L85-L91
+        completion_cmds=$(find ./bin -type f -printf "%f\n")
+
+        node ./lib/create_client.js
+        for cmd in $completion_cmds; do
+          installShellCompletion --cmd $cmd --bash <(./bin/$cmd --completion)
+        done
+      '';
+    };
+
     markdownlint-cli = super.markdownlint-cli.override {
       meta.mainProgram = "markdownlint";
     };
@@ -211,6 +232,15 @@ let
         wrapProgram "$out/bin/node-gyp" \
           --set npm_config_nodedir ${nodejs}
       '';
+    };
+
+    near-cli = super.near-cli.override {
+      nativeBuildInputs = with pkgs; [
+        libusb1
+        nodePackages.prebuild-install
+        nodePackages.node-gyp-build
+        pkg-config
+      ];
     };
 
     node-inspector = super.node-inspector.override {
@@ -242,6 +272,19 @@ let
           (fetchpatch {
             url = "https://github.com/svanderburg/node2nix/commit/58736093161f2d237c17e75a96529b018cd0ac64.patch";
             sha256 = "0sif7803c9g6gjmmdniw5qxrq5igiz9nqdmdrcf1hxfi5x43a32h";
+          })
+          # Extract common logic from composePackage to a shell function
+          (fetchpatch {
+            url = "https://github.com/svanderburg/node2nix/commit/e4c951971df6c9f9584c7252971c13b55c369916.patch";
+            sha256 = "0w8fcyr12g2340rn06isv40jkmz2khmak81c95zpkjgipzx7hp7w";
+          })
+          # handle package alias in dependencies
+          # https://github.com/svanderburg/node2nix/pull/240
+          #
+          # TODO: remove after node2nix 1.10.0
+          (fetchpatch {
+            url = "https://github.com/svanderburg/node2nix/commit/644e90c0304038a446ed53efc97e9eb1e2831e71.patch";
+            sha256 = "sha256-sQgVf80H1ouUjzHq+2d9RO4a+o++kh+l+FOTNXfPBH0=";
           })
         ];
       };
@@ -287,6 +330,13 @@ let
       '';
     };
 
+    parcel = super.parcel.override {
+      buildInputs = [ self.node-gyp-build ];
+      preRebuild = ''
+        sed -i -e "s|#!/usr/bin/env node|#! ${pkgs.nodejs}/bin/node|" node_modules/node-gyp-build/bin.js
+      '';
+    };
+
     postcss-cli = super.postcss-cli.override {
       nativeBuildInputs = [ pkgs.makeWrapper ];
       postInstall = ''
@@ -304,20 +354,13 @@ let
 
     prisma = super.prisma.override rec {
       nativeBuildInputs = [ pkgs.makeWrapper ];
-      version = "3.4.0";
+
+      inherit (pkgs.prisma-engines) version;
+
       src = fetchurl {
         url = "https://registry.npmjs.org/prisma/-/prisma-${version}.tgz";
-        sha512 = "sha512-W0AFjVxPOLW5SEnf0ZwbOu4k8ElX98ioFC1E8Gb9Q/nuO2brEwxFJebXglfG+N6zphGbu2bG1I3VAu7aYzR3VA==";
+        sha512 = "sha512-8SdsLPhKR3mOfoo2o73h9mNn3v5kA/RqGA26Sv6qDS78Eh2uepPqt5e8/nwj5EOblYm5HEGuitaXQrOCLb6uTw==";
       };
-      dependencies = [ rec {
-        name = "_at_prisma_slash_engines";
-        packageName = "@prisma/engines";
-        version = "3.4.0-27.1c9fdaa9e2319b814822d6dbfd0a69e1fcc13a85";
-        src = fetchurl {
-          url = "https://registry.npmjs.org/@prisma/engines/-/engines-${version}.tgz";
-          sha512 = "sha512-jyCjXhX1ZUbzA7+6Hm0iEdeY+qFfpD/RB7iSwMrMoIhkVYvnncSdCLBgbK0yqxTJR2nglevkDY2ve3QDxFciMA==";
-        };
-      }];
       postInstall = with pkgs; ''
         wrapProgram "$out/bin/prisma" \
           --set PRISMA_MIGRATION_ENGINE_BINARY ${prisma-engines}/bin/migration-engine \
@@ -340,6 +383,19 @@ let
       '';
     };
 
+    reveal-md = super.reveal-md.override (
+      lib.optionalAttrs (!stdenv.isDarwin) {
+        nativeBuildInputs = [ pkgs.makeWrapper ];
+        prePatch = ''
+          export PUPPETEER_SKIP_CHROMIUM_DOWNLOAD=1
+        '';
+        postInstall = ''
+          wrapProgram $out/bin/reveal-md \
+          --set PUPPETEER_EXECUTABLE_PATH ${pkgs.chromium.outPath}/bin/chromium
+        '';
+      }
+    );
+
     ssb-server = super.ssb-server.override {
       buildInputs = [ pkgs.automake pkgs.autoconf self.node-gyp-build ];
       meta.broken = since "10";
@@ -348,6 +404,25 @@ let
     stf = super.stf.override {
       meta.broken = since "10";
     };
+
+    tailwindcss = super.tailwindcss.overrideAttrs (oldAttrs: {
+      plugins = [ ];
+      nativeBuildInputs = [ pkgs.makeWrapper ];
+      postInstall = ''
+        nodePath=""
+        for p in "$out" "${self.postcss}" $plugins; do
+          nodePath="$nodePath''${nodePath:+:}$p/lib/node_modules"
+        done
+        wrapProgram "$out/bin/tailwind" \
+          --prefix NODE_PATH : "$nodePath"
+        wrapProgram "$out/bin/tailwindcss" \
+          --prefix NODE_PATH : "$nodePath"
+        unset nodePath
+      '';
+      passthru.tests = {
+        simple-execution = pkgs.callPackage ./package-tests/tailwindcss.nix { inherit (self) tailwindcss; };
+      };
+    });
 
     tedicross = super."tedicross-git+https://github.com/TediCross/TediCross.git#v0.8.7".override {
       nativeBuildInputs = [ pkgs.makeWrapper ];
@@ -369,12 +444,17 @@ let
       nativeBuildInputs = [ pkgs.makeWrapper ];
       postInstall = ''
         wrapProgram "$out/bin/typescript-language-server" \
-          --prefix PATH : ${pkgs.lib.makeBinPath [ self.typescript ]}
+          --suffix PATH : ${pkgs.lib.makeBinPath [ self.typescript ]}
       '';
     };
 
     teck-programmer = super.teck-programmer.override {
+      nativeBuildInputs = [ self.node-gyp-build ];
       buildInputs = [ pkgs.libusb1 ];
+    };
+
+    uppy-companion = super."@uppy/companion".override {
+      name = "uppy-companion";
     };
 
     vega-cli = super.vega-cli.override {
@@ -428,6 +508,16 @@ let
       buildInputs = [ self.node-pre-gyp ];
       postInstall = ''
         echo /var/lib/thelounge > $out/lib/node_modules/thelounge/.thelounge_home
+        patch -d $out/lib/node_modules/thelounge -p1 < ${./thelounge-packages-path.patch}
+      '';
+      passthru.tests = { inherit (nixosTests) thelounge; };
+      meta = super.thelounge.meta // { maintainers = with lib.maintainers; [ winter ]; };
+    };
+
+    triton = super.triton.override {
+      nativeBuildInputs = [ pkgs.installShellFiles ];
+      postInstall = ''
+        installShellCompletion --cmd triton --bash <($out/bin/triton completion)
       '';
     };
 

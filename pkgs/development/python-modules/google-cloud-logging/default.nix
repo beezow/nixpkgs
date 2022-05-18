@@ -12,16 +12,15 @@
 , proto-plus
 , pytestCheckHook
 , pytest-asyncio
-, webapp2
 }:
 
 buildPythonPackage rec {
   pname = "google-cloud-logging";
-  version = "2.6.0";
+  version = "3.0.0";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "sha256-SZ7tXxPKuAXIeAsNFKDZMan/HWXvzN2eaHctQOfa1MU=";
+    sha256 = "sha256-RS42Hh3Lwo8iCMCAXBp8usAwdkVWcD2XZW0FIYuTNwg=";
   };
 
   postPatch = ''
@@ -58,7 +57,7 @@ buildPythonPackage rec {
     rm tests/system/test_system.py tests/unit/test__gapic.py
   '';
 
-  pythonImortsCheck = [
+  pythonImportsCheck = [
     "google.cloud.logging"
     "google.cloud.logging_v2"
   ];

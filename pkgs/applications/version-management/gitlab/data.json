@@ -1,14 +1,14 @@
 {
-  "version": "14.4.1",
-  "repo_hash": "0sm44iyn32frc7njg6ypgbcip77mj5c3agn3cihk3lz7z5kr48lm",
-  "yarn_hash": "0l0lgcgxaira980a1y550pfsm4f2pw97gi8s5pghyfil2v2lyxyw",
+  "version": "14.8.2",
+  "repo_hash": "1pl528qxsbg75l5nny7cw8hcsd0zs50hhn0ngdrf3gjpd6y7pzcc",
+  "yarn_hash": "0dlhslkhiha4jyfzm0k8i9cgwdk12r5m67i2rznxbrkl38gk9c1x",
   "owner": "gitlab-org",
   "repo": "gitlab",
-  "rev": "v14.4.1-ee",
+  "rev": "v14.8.2-ee",
   "passthru": {
-    "GITALY_SERVER_VERSION": "14.4.1",
-    "GITLAB_PAGES_VERSION": "1.46.0",
-    "GITLAB_SHELL_VERSION": "13.21.1",
-    "GITLAB_WORKHORSE_VERSION": "14.4.1"
+    "GITALY_SERVER_VERSION": "14.8.2",
+    "GITLAB_PAGES_VERSION": "1.54.0",
+    "GITLAB_SHELL_VERSION": "13.23.2",
+    "GITLAB_WORKHORSE_VERSION": "14.8.2"
   }
 }

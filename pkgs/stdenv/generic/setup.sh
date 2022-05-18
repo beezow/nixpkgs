@@ -1,3 +1,5 @@
+# shellcheck shell=bash
+__nixpkgs_setup_set_original=$-
 set -eu
 set -o pipefail
 shopt -s inherit_errexit
@@ -859,12 +861,12 @@ _defaultUnpack() {
         case "$fn" in
             *.tar.xz | *.tar.lzma | *.txz)
                 # Don't rely on tar knowing about .xz.
-                xz -d < "$fn" | tar xf -
+                xz -d < "$fn" | tar xf - --warning=no-timestamp
                 ;;
             *.tar | *.tar.* | *.tgz | *.tbz2 | *.tbz)
                 # GNU tar can automatically select the decompression method
                 # (info "(tar) gzip").
-                tar xf "$fn"
+                tar xf "$fn" --warning=no-timestamp
                 ;;
             *)
                 return 1
@@ -986,7 +988,18 @@ patchPhase() {
 
 
 fixLibtool() {
-    sed -i -e 's^eval sys_lib_.*search_path=.*^^' "$1"
+    local search_path
+    for flag in $NIX_LDFLAGS; do
+        case $flag in
+            -L*)
+                search_path+=" ${flag#-L}"
+                ;;
+        esac
+    done
+
+    sed -i "$1" \
+        -e "s^eval \(sys_lib_search_path=\).*^\1'$search_path'^" \
+        -e 's^eval sys_lib_.+search_path=.*^^'
 }
 
 
@@ -1350,5 +1363,7 @@ runHook userHook
 
 dumpVars
 
-# Disable nounset for nix-shell.
-set +u
+# Restore the original options for nix-shell
+[[ $__nixpkgs_setup_set_original == *e* ]] || set +e
+[[ $__nixpkgs_setup_set_original == *u* ]] || set +u
+unset -v __nixpkgs_setup_set_original

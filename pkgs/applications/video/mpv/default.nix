@@ -15,105 +15,73 @@
 , freetype
 , libass
 , libpthreadstubs
-, mujs
 , nv-codec-headers
 , lua
 , libuchardet
-, libiconv ? null
+, libiconv
 , CoreFoundation, Cocoa, CoreAudio, MediaPlayer
 
 , waylandSupport ? stdenv.isLinux
-  , wayland           ? null
-  , wayland-protocols ? null
-  , libxkbcommon      ? null
+  , wayland
+  , wayland-protocols
+  , libxkbcommon
 
 , x11Support ? stdenv.isLinux
-  , libGLU, libGL ? null
-  , libX11          ? null
-  , libXext         ? null
-  , libXxf86vm      ? null
-  , libXrandr       ? null
+  , libGLU, libGL
+  , libX11
+  , libXext
+  , libXxf86vm
+  , libXrandr
 
 , cddaSupport ? false
-  , libcdio          ? null
-  , libcdio-paranoia ? null
+  , libcdio
+  , libcdio-paranoia
 
 , vulkanSupport ? stdenv.isLinux
-  , libplacebo     ? null
-  , shaderc        ? null
-  , vulkan-headers ? null
-  , vulkan-loader  ? null
+  , libplacebo
+  , shaderc
+  , vulkan-headers
+  , vulkan-loader
 
 , drmSupport ? stdenv.isLinux
-  , libdrm ? null
-  , mesa   ? null
+  , libdrm
+  , mesa
 
-, alsaSupport        ? stdenv.isLinux, alsa-lib      ? null
-, archiveSupport     ? true,           libarchive    ? null
-, bluraySupport      ? true,           libbluray     ? null
-, bs2bSupport        ? true,           libbs2b       ? null
-, cacaSupport        ? true,           libcaca       ? null
-, cmsSupport         ? true,           lcms2         ? null
-, dvdnavSupport      ? stdenv.isLinux, libdvdnav     ? null
-, jackaudioSupport   ? false,          libjack2      ? null
-, libpngSupport      ? true,           libpng        ? null
-, openalSupport      ? true,           openalSoft    ? null
-, pulseSupport       ? config.pulseaudio or stdenv.isLinux, libpulseaudio ? null
-, rubberbandSupport  ? stdenv.isLinux, rubberband    ? null
-, screenSaverSupport ? true,           libXScrnSaver ? null
-, sdl2Support        ? true,           SDL2          ? null
-, sixelSupport       ? false,          libsixel      ? null
-, speexSupport       ? true,           speex         ? null
-, swiftSupport       ? false,          swift         ? null
-, theoraSupport      ? true,           libtheora     ? null
-, vaapiSupport       ? stdenv.isLinux, libva         ? null
-, vapoursynthSupport ? false,          vapoursynth   ? null
-, vdpauSupport       ? true,           libvdpau      ? null
-, xineramaSupport    ? stdenv.isLinux, libXinerama   ? null
-, xvSupport          ? stdenv.isLinux, libXv         ? null
-, zimgSupport        ? true,           zimg          ? null
+, alsaSupport        ? stdenv.isLinux, alsa-lib
+, archiveSupport     ? true,           libarchive
+, bluraySupport      ? true,           libbluray
+, bs2bSupport        ? true,           libbs2b
+, cacaSupport        ? true,           libcaca
+, cmsSupport         ? true,           lcms2
+, dvdnavSupport      ? stdenv.isLinux, libdvdnav
+, jackaudioSupport   ? false,          libjack2
+, javascriptSupport  ? true,           mujs
+, libpngSupport      ? true,           libpng
+, openalSupport      ? true,           openalSoft
+, pulseSupport       ? config.pulseaudio or stdenv.isLinux, libpulseaudio
+, rubberbandSupport  ? stdenv.isLinux, rubberband
+, screenSaverSupport ? true,           libXScrnSaver
+, sdl2Support        ? true,           SDL2
+, sixelSupport       ? false,          libsixel
+, speexSupport       ? true,           speex
+, swiftSupport       ? false,          swift
+, theoraSupport      ? true,           libtheora
+, vaapiSupport       ? stdenv.isLinux, libva
+, vapoursynthSupport ? false,          vapoursynth
+, vdpauSupport       ? true,           libvdpau
+, xineramaSupport    ? stdenv.isLinux, libXinerama
+, xvSupport          ? stdenv.isLinux, libXv
+, zimgSupport        ? true,           zimg
 }:
 
 with lib;
-
-let
-  available = x: x != null;
-in
-assert alsaSupport        -> available alsa-lib;
-assert archiveSupport     -> available libarchive;
-assert bluraySupport      -> available libbluray;
-assert bs2bSupport        -> available libbs2b;
-assert cacaSupport        -> available libcaca;
-assert cddaSupport        -> all available [ libcdio libcdio-paranoia ];
-assert cmsSupport         -> available lcms2;
-assert drmSupport         -> all available [ libdrm mesa ];
-assert dvdnavSupport      -> available libdvdnav;
-assert jackaudioSupport   -> available libjack2;
-assert libpngSupport      -> available libpng;
-assert openalSupport      -> available openalSoft;
-assert pulseSupport       -> available libpulseaudio;
-assert rubberbandSupport  -> available rubberband;
-assert screenSaverSupport -> available libXScrnSaver;
-assert sdl2Support        -> available SDL2;
-assert sixelSupport       -> available libsixel;
-assert speexSupport       -> available speex;
-assert theoraSupport      -> available libtheora;
-assert vaapiSupport       -> available libva;
-assert vapoursynthSupport -> available vapoursynth;
-assert vdpauSupport       -> available libvdpau;
-assert vulkanSupport      -> all available [ libplacebo shaderc vulkan-headers vulkan-loader ];
-assert waylandSupport     -> all available [ wayland wayland-protocols libxkbcommon ];
-assert x11Support         -> all available [ libGLU libGL libX11 libXext libXxf86vm libXrandr ];
-assert xineramaSupport    -> x11Support && available libXinerama;
-assert xvSupport          -> x11Support && available libXv;
-assert zimgSupport        -> available zimg;
 
 let
   luaEnv = lua.withPackages (ps: with ps; [ luasocket ]);
 
 in stdenv.mkDerivation rec {
   pname = "mpv";
-  version = "0.34.0";
+  version = "0.34.1";
 
   outputs = [ "out" "dev" "man" ];
 
@@ -121,14 +89,15 @@ in stdenv.mkDerivation rec {
     owner = "mpv-player";
     repo = "mpv";
     rev = "v${version}";
-    sha256 = "sha256-qa6xZV4aLcHBMa2bIqoKjte4+KWEGGZre4L0u1+eDE8=";
+    sha256 = "12qxwm1ww5vhjddl8yvj1xa0n1fi9z3lmzwhaiday2v59ca0qgsk";
   };
 
   postPatch = ''
     patchShebangs ./TOOLS/
   '';
+
   NIX_LDFLAGS = lib.optionalString x11Support "-lX11 -lXext "
-              + lib.optionalString stdenv.isDarwin "-framework CoreFoundation";
+    + lib.optionalString stdenv.isDarwin "-framework CoreFoundation";
 
   wafConfigureFlags = [
     "--enable-libmpv-shared"
@@ -139,6 +108,7 @@ in stdenv.mkDerivation rec {
     (lib.enableFeature archiveSupport  "libarchive")
     (lib.enableFeature cddaSupport     "cdda")
     (lib.enableFeature dvdnavSupport   "dvdnav")
+    (lib.enableFeature javascriptSupport "javascript")
     (lib.enableFeature openalSupport   "openal")
     (lib.enableFeature sdl2Support     "sdl2")
     (lib.enableFeature sixelSupport    "sixel")
@@ -165,7 +135,6 @@ in stdenv.mkDerivation rec {
     libpthreadstubs
     libuchardet
     luaEnv
-    mujs
   ] ++ lib.optionals alsaSupport        [ alsa-lib ]
     ++ lib.optionals archiveSupport     [ libarchive ]
     ++ lib.optionals bluraySupport      [ libbluray ]
@@ -176,6 +145,7 @@ in stdenv.mkDerivation rec {
     ++ lib.optionals drmSupport         [ libdrm mesa ]
     ++ lib.optionals dvdnavSupport      [ libdvdnav libdvdnav.libdvdread ]
     ++ lib.optionals jackaudioSupport   [ libjack2 ]
+    ++ lib.optionals javascriptSupport  [ mujs ]
     ++ lib.optionals libpngSupport      [ libpng ]
     ++ lib.optionals openalSupport      [ openalSoft ]
     ++ lib.optionals pulseSupport       [ libpulseaudio ]
@@ -227,18 +197,6 @@ in stdenv.mkDerivation rec {
     addOpenGLRunpath $out/bin/mpv
   '';
 
-  meta = with lib; {
-    homepage = "https://mpv.io";
-    description = "General-purpose media player, fork of MPlayer and mplayer2";
-    longDescription = ''
-      mpv is a free and open-source general-purpose video player, based on the
-      MPlayer and mplayer2 projects, with great improvements above both.
-    '';
-    license = licenses.gpl2Plus;
-    maintainers = with maintainers; [ AndersonTorres fpletz globin ma27 tadeokondrak ];
-    platforms = platforms.darwin ++ platforms.linux;
-  };
-
   passthru = {
     inherit
     # The wrapper consults luaEnv and lua.version
@@ -251,5 +209,17 @@ in stdenv.mkDerivation rec {
     vapoursynthSupport
     vapoursynth
     ;
+  };
+
+  meta = with lib; {
+    homepage = "https://mpv.io";
+    description = "General-purpose media player, fork of MPlayer and mplayer2";
+    longDescription = ''
+      mpv is a free and open-source general-purpose video player, based on the
+      MPlayer and mplayer2 projects, with great improvements above both.
+    '';
+    license = licenses.gpl2Plus;
+    maintainers = with maintainers; [ AndersonTorres fpletz globin ma27 tadeokondrak ];
+    platforms = platforms.darwin ++ platforms.linux;
   };
 }

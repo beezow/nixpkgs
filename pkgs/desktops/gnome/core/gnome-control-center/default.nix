@@ -60,7 +60,7 @@
 , tzdata
 , udisks2
 , upower
-, epoxy
+, libepoxy
 , gnome-user-share
 , gnome-remote-desktop
 , wrapGAppsHook
@@ -68,11 +68,11 @@
 
 stdenv.mkDerivation rec {
   pname = "gnome-control-center";
-  version = "41.1";
+  version = "41.4";
 
   src = fetchurl {
     url = "mirror://gnome/sources/${pname}/${lib.versions.major version}/${pname}-${version}.tar.xz";
-    sha256 = "sha256-6gxxSExlzizBE3b5sB5iEfpKf/0zT0MH/FLJPw/d1Mc=";
+    sha256 = "sha256-1tsMTLcIV77PSKxQB/ErX2O51dfoDqfuV9O+USZp98k=";
   };
 
   patches = [
@@ -105,7 +105,7 @@ stdenv.mkDerivation rec {
     clutter-gtk
     colord
     colord-gtk
-    epoxy
+    libepoxy
     fontconfig
     gdk-pixbuf
     glib

@@ -5,12 +5,17 @@
 
 buildPythonPackage rec {
   pname = "striprtf";
-  version = "0.0.15";
+  version = "0.0.20";
+  format = "setuptools";
 
   src = fetchPypi {
     inherit pname version;
-    sha256 = "1yvgnmds034z28mscff0amm0g47ni0753nshvrq2swdpipymiwz0";
+    sha256 = "sha256-8eMeMrazl1o9XcIyWICDg6ycRMtFMfgTUNz51w9hAmc=";
   };
+
+  pythonImportsCheck = [
+    "striprtf"
+  ];
 
   meta = with lib; {
     homepage = "https://github.com/joshy/striprtf";

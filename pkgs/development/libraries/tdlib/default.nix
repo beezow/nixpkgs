@@ -1,16 +1,15 @@
 { fetchFromGitHub, gperf, openssl, readline, zlib, cmake, lib, stdenv }:
 
 stdenv.mkDerivation rec {
-  version = "1.7.8";
   pname = "tdlib";
+  version = "1.8.1";
 
   src = fetchFromGitHub {
     owner = "tdlib";
     repo = "td";
-
-    rev = "a68d8e77efb03896f3a04fc316c47136b0bab7df";
-
-    sha256 = "0zis1mxb495lazmhax91h94nw73nyq82bhbx3f1zlxkvc8664099";
+    # https://github.com/tdlib/td/issues/1790
+    rev = "92c2a9c4e521df720abeaa9872e1c2b797d5c93f";
+    sha256 = "ZoKsgdkS78mptfbxkkV4pgcgJEaWwKZWK2cvmxgJN4E=";
   };
 
   buildInputs = [ gperf openssl readline zlib ];

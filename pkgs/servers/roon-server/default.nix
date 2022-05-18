@@ -8,13 +8,14 @@
 , icu66
 , krb5
 , lib
+, libtasn1
 , makeWrapper
 , stdenv
 , openssl
 }:
 stdenv.mkDerivation rec {
   pname = "roon-server";
-  version = "1.8-846";
+  version = "1.8-903";
 
   src =
     let
@@ -22,19 +23,21 @@ stdenv.mkDerivation rec {
     in
     fetchurl {
       url = "http://download.roonlabs.com/builds/RoonServer_linuxx64_${urlVersion}.tar.bz2";
-      sha256 = "sha256-BoHvODaAcK5b4/syOm3vpOTpq9ETovpWKUqG+UGr2e0=";
+      sha256 = "sha256-FkB3sh1uwOctBOAW7eO8HFNr9a9RG3Yq4hKKscYYER4=";
     };
+
+  dontConfigure = true;
+  dontBuild = true;
 
   buildInputs = [
     alsa-lib
     freetype
     krb5
+    libtasn1
     stdenv.cc.cc.lib
   ];
 
   nativeBuildInputs = [ autoPatchelfHook makeWrapper ];
-
-  propagatedBuildInputs = [ alsa-utils cifs-utils ffmpeg ];
 
   installPhase =
     let
@@ -55,8 +58,9 @@ stdenv.mkDerivation rec {
           makeWrapper "$dotnetDir/$binName" "${binPath}" \
             --add-flags "$binDir/$binName.dll" \
             --argv0 "$binName" \
-            --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ icu66 openssl ]}" \
+            --prefix LD_LIBRARY_PATH : "${lib.makeLibraryPath [ alsa-lib icu66 ffmpeg openssl ]}" \
             --prefix PATH : "$dotnetDir" \
+            --prefix PATH : "${lib.makeBinPath [ alsa-utils cifs-utils ffmpeg ]}" \
             --run "cd $binDir" \
             --set DOTNET_ROOT "$dotnetDir"
         )

@@ -4,14 +4,18 @@
 }:
 
 assert builtins.elem type [ "aspnetcore" "runtime" "sdk"];
-{ lib, stdenv
+
+{ lib
+, stdenv
 , fetchurl
+, writeText
 , libunwind
 , openssl
 , icu
 , libuuid
 , zlib
 , curl
+, lttng-ust_2_12
 }:
 
 let
@@ -40,15 +44,19 @@ let
 in stdenv.mkDerivation rec {
   inherit pname version;
 
-  rpath = lib.makeLibraryPath [
+  # Some of these dependencies are `dlopen()`ed.
+  rpath = lib.makeLibraryPath ([
+    stdenv.cc.cc
+    zlib
+
     curl
     icu
     libunwind
     libuuid
     openssl
-    stdenv.cc.cc
-    zlib
-  ];
+  ] ++ lib.optionals stdenv.isLinux [
+    lttng-ust_2_12
+  ]);
 
   src = fetchurl {
     url = builtins.getAttr type urls;
@@ -73,12 +81,19 @@ in stdenv.mkDerivation rec {
     patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" $out/dotnet
     patchelf --set-rpath "${rpath}" $out/dotnet
     find $out -type f -name "*.so" -exec patchelf --set-rpath '$ORIGIN:${rpath}' {} \;
-    find $out -type f -name "apphost" -exec patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" --set-rpath '$ORIGIN:${rpath}' {} \;
+    find $out -type f \( -name "apphost" -or -name "createdump" \) -exec patchelf --set-interpreter "${stdenv.cc.bintools.dynamicLinker}" --set-rpath '$ORIGIN:${rpath}' {} \;
   '';
 
   doInstallCheck = true;
   installCheckPhase = ''
     $out/bin/dotnet --info
+  '';
+
+  setupHook = writeText "dotnet-setup-hook" ''
+    export HOME=$(mktemp -d) # Dotnet expects a writable home directory for its configuration files
+    export DOTNET_SKIP_FIRST_TIME_EXPERIENCE=1 # Dont try to expand NuGetFallbackFolder to disk
+    export DOTNET_NOLOGO=1 # Disables the welcome message
+    export DOTNET_CLI_TELEMETRY_OPTOUT=1
   '';
 
   meta = with lib; {

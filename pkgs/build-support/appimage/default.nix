@@ -68,6 +68,8 @@ rec {
       xdg-utils
       iana-etc
       krb5
+      gsettings-desktop-schemas
+      hicolor-icon-theme # dont show a gtk warning about hicolor not being installed
     ];
 
     # list of libraries expected in an appimage environment:
@@ -106,7 +108,7 @@ rec {
       xorg.libICE
       gnome2.GConf
       freetype
-      (curl.override { gnutlsSupport = true; sslSupport = false; })
+      (curl.override { gnutlsSupport = true; opensslSupport = false; })
       nspr
       nss
       fontconfig
@@ -123,7 +125,6 @@ rec {
       atk
       at-spi2-atk
       libudev0-shim
-      networkmanager098
 
       xorg.libXt
       xorg.libXmu
@@ -179,6 +180,8 @@ rec {
       libjack2
       fribidi
       p11-kit
+
+      gmp
 
       # libraries not on the upstream include list, but nevertheless expected
       # by at least one appimage

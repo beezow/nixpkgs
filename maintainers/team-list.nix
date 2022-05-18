@@ -29,6 +29,20 @@ with lib.maintainers; {
     scope = "Maintain ACME-related packages and modules.";
   };
 
+  bazel = {
+    members = [
+      mboes
+      marsam
+      uri-canva
+      cbley
+      olebedev
+      groodt
+      aherrmann
+      ylecornec
+    ];
+    scope = "Bazel build tool & related tools https://bazel.build/";
+  };
+
   beam = {
     members = [
       ankhers
@@ -36,6 +50,7 @@ with lib.maintainers; {
       DianaOlympos
       gleber
       happysalada
+      minijackson
       yurrriq
     ];
     scope = "Maintain BEAM-related packages and modules.";
@@ -50,7 +65,6 @@ with lib.maintainers; {
 
   chia = {
     members = [
-      atemu
       lourkeur
     ];
     scope = "Maintain the Chia blockchain and its dependencies";
@@ -93,7 +107,6 @@ with lib.maintainers; {
       cstrahan
       Frostman
       kalbasit
-      mdlayher
       mic92
       orivej
       rvolosatovs
@@ -153,6 +166,17 @@ with lib.maintainers; {
     scope = "Maintain Jitsi.";
   };
 
+  kubernetes = {
+    members = [
+      johanot
+      offline
+      saschagrunert
+      srhb
+      zowoq
+    ];
+    scope = "Maintain the Kubernetes package and module";
+  };
+
   kodi = {
     members = [
       aanderse
@@ -190,7 +214,6 @@ with lib.maintainers; {
       mguentner
       ekleog
       ralith
-      mjlbach
       dandellion
       sumnerevans
     ];
@@ -199,7 +222,7 @@ with lib.maintainers; {
 
   openstack = {
     members = [
-      angustrau
+      emilytrau
       SuperSandro2000
     ];
     scope = "Maintain the ecosystem around OpenStack";
@@ -216,6 +239,7 @@ with lib.maintainers; {
   php = {
     members = [
       aanderse
+      drupol
       etu
       globin
       ma27
@@ -234,6 +258,15 @@ with lib.maintainers; {
     scope = "Maintain Podman and CRI-O related packages and modules.";
   };
 
+  redcodelabs = {
+    members = [
+      unrooted
+      wr0belj
+      wintrmvte
+    ];
+    scope = "Maintain Red Code Labs related packages and modules.";
+  };
+
   sage = {
     members = [
       timokau
@@ -242,6 +275,13 @@ with lib.maintainers; {
       collares
     ];
     scope = "Maintain SageMath and the dependencies that are likely to break it.";
+  };
+
+  sphinx = {
+    members = [
+      SuperSandro2000
+    ];
+    scope = "Maintain Sphinx related packages.";
   };
 
   serokell = {
@@ -259,5 +299,12 @@ with lib.maintainers; {
       mic92
     ];
     scope = "coqui-ai TTS (formerly Mozilla TTS) and leaf packages";
+  };
+
+  xfce = {
+    members = [
+      romildo
+    ];
+    scope = "Maintain Xfce desktop environment and related packages.";
   };
 }

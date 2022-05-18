@@ -179,11 +179,6 @@ in
   in mkIf enabled {
     assertions = [
       {
-        assertion = with config.services.xserver.displayManager; gdm.nvidiaWayland -> cfg.modesetting.enable;
-        message = "You cannot use wayland with GDM without modesetting enabled for NVIDIA drivers, set `hardware.nvidia.modesetting.enable = true`";
-      }
-
-      {
         assertion = primeEnabled -> pCfg.intelBusId == "" || pCfg.amdgpuBusId == "";
         message = ''
           You cannot configure both an Intel iGPU and an AMD APU. Pick the one corresponding to your processor.
@@ -290,11 +285,15 @@ in
 
     hardware.opengl.package = mkIf (!offloadCfg.enable) nvidia_x11.out;
     hardware.opengl.package32 = mkIf (!offloadCfg.enable) nvidia_x11.lib32;
-    hardware.opengl.extraPackages = optional offloadCfg.enable nvidia_x11.out;
-    hardware.opengl.extraPackages32 = optional offloadCfg.enable nvidia_x11.lib32;
+    hardware.opengl.extraPackages = [
+      pkgs.nvidia-vaapi-driver
+    ] ++ optional offloadCfg.enable nvidia_x11.out;
+    hardware.opengl.extraPackages32 = [
+      pkgs.pkgsi686Linux.nvidia-vaapi-driver
+    ] ++ optional offloadCfg.enable nvidia_x11.lib32;
 
     environment.systemPackages = [ nvidia_x11.bin ]
-      ++ optionals nvidiaSettings [ nvidia_x11.settings ]
+      ++ optionals cfg.nvidiaSettings [ nvidia_x11.settings ]
       ++ optionals nvidiaPersistencedEnabled [ nvidia_x11.persistenced ];
 
     systemd.packages = optional cfg.powerManagement.enable nvidia_x11.out;

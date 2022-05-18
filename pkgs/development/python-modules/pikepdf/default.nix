@@ -8,6 +8,7 @@
 , jbig2dec
 , lxml
 , mupdf
+, packaging
 , pillow
 , psutil
 , pybind11
@@ -24,7 +25,7 @@
 
 buildPythonPackage rec {
   pname = "pikepdf";
-  version = "3.2.0";
+  version = "5.0.1";
   disabled = ! isPy3k;
 
   src = fetchFromGitHub {
@@ -37,7 +38,7 @@ buildPythonPackage rec {
     extraPostFetch = ''
       rm "$out/.git_archival.txt"
     '';
-    sha256 = "03c7ihd6rf6kdfc3cpgxy5pi6cj4zwscz8nyxmmp15fmdk3hkw4g";
+    hash = "sha256-PlfVvCEutWaNQyhP4j44viAmjvBzUlZUvUbYQPcNL24=";
   };
 
   patches = [
@@ -73,6 +74,7 @@ buildPythonPackage rec {
   propagatedBuildInputs = [
     defusedxml
     lxml
+    packaging
     pillow
     setuptools
   ];

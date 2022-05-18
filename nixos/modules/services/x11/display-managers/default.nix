@@ -7,13 +7,14 @@
 # (e.g., KDE, Gnome or a plain xterm), and optionally the *window
 # manager* (e.g. kwin or twm).
 
-{ config, lib, pkgs, ... }:
+{ config, lib, options, pkgs, ... }:
 
 with lib;
 
 let
 
   cfg = config.services.xserver;
+  opt = options.services.xserver;
   xorg = pkgs.xorg;
 
   fontconfig = config.fonts.fontconfig;
@@ -147,6 +148,7 @@ in
       xauthBin = mkOption {
         internal = true;
         default = "${xorg.xauth}/bin/xauth";
+        defaultText = literalExpression ''"''${pkgs.xorg.xauth}/bin/xauth"'';
         description = "Path to the <command>xauth</command> program used by display managers.";
       };
 
@@ -217,6 +219,24 @@ in
 
       session = mkOption {
         default = [];
+        type = with types; listOf (submodule ({ ... }: {
+          options = {
+            manage = mkOption {
+              description = "Whether this is a desktop or a window manager";
+              type = enum [ "desktop" "window" ];
+            };
+
+            name = mkOption {
+              description = "Name of this session";
+              type = str;
+            };
+
+            start = mkOption {
+              description = "Commands to run to start this session";
+              type = lines;
+            };
+          };
+        }));
         example = literalExpression
           ''
             [ { manage = "desktop";
@@ -278,6 +298,9 @@ in
             defaultSessionFromLegacyOptions
           else
             null;
+        defaultText = literalDocBook ''
+          Taken from display manager settings or window manager settings, if either is set.
+        '';
         example = "gnome";
         description = ''
           Graphical session to pre-select in the session chooser (only effective for GDM, LightDM and SDDM).
@@ -337,11 +360,12 @@ in
 
       # Configuration for automatic login. Common for all DM.
       autoLogin = mkOption {
-        type = types.submodule {
+        type = types.submodule ({ config, options, ... }: {
           options = {
             enable = mkOption {
               type = types.bool;
-              default = cfg.displayManager.autoLogin.user != null;
+              default = config.user != null;
+              defaultText = literalExpression "config.${options.user} != null";
               description = ''
                 Automatically log in as <option>autoLogin.user</option>.
               '';
@@ -355,7 +379,7 @@ in
               '';
             };
           };
-        };
+        });
 
         default = {};
         description = ''

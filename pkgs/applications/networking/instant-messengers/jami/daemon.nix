@@ -3,10 +3,11 @@
 , jami-meta
 , stdenv
 , lib
+, fetchFromGitHub
 , autoreconfHook
 , pkg-config
 , perl # for pod2man
-, ffmpeg
+, ffmpeg_4
 , pjsip
 , alsa-lib
 , asio
@@ -38,7 +39,7 @@
 let
   readLinesToList = with builtins; file: filter (s: isString s && stringLength s > 0) (split "\n" (readFile file));
 
-  ffmpeg-jami = ffmpeg.overrideAttrs (old:
+  ffmpeg-jami = ffmpeg_4.overrideAttrs (old:
     let
       patch-src = src + "/daemon/contrib/src/ffmpeg/";
     in
@@ -57,9 +58,15 @@ let
 
   pjsip-jami = pjsip.overrideAttrs (old:
     let
+      src-args = import ./pjproject-src.nix;
+      version = lib.concatStrings (lib.lists.take 7 (lib.stringToCharacters src-args.rev));
       patch-src = src + "/daemon/contrib/src/pjproject/";
     in
     {
+      inherit version;
+
+      src = fetchFromGitHub src-args;
+
       patches = old.patches ++ (map (x: patch-src + x) (readLinesToList ./config/pjsip_patches));
     });
 
@@ -68,7 +75,8 @@ let
     enablePushNotifications = true;
   };
 
-in stdenv.mkDerivation {
+in
+stdenv.mkDerivation {
   pname = "jami-daemon";
   inherit src version;
   sourceRoot = "source/daemon";
