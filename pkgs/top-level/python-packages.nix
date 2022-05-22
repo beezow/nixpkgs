@@ -1533,6 +1533,8 @@ in {
 
   censys = callPackage ../development/python-modules/censys { };
 
+  control = callPackage ../development/python-modules/python-control { };
+
   connect-box = callPackage ../development/python-modules/connect_box { };
 
   connection-pool = callPackage ../development/python-modules/connection-pool { };
@@ -9602,6 +9604,8 @@ in {
   slugid = callPackage ../development/python-modules/slugid { };
 
   sly = callPackage ../development/python-modules/sly { };
+
+  slycot = callPackage ../development/python-modules/slycot { };
 
   smart-meter-texas = callPackage ../development/python-modules/smart-meter-texas { };
 
