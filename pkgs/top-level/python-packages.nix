@@ -10778,6 +10778,10 @@ in {
     inherit (pkgs.darwin.apple_sdk.frameworks) ApplicationServices CoreServices;
   };
 
+  v4l2capture = callPackage ../development/python-modules/v4l2capture { };
+
+  v4l2py = callPackage ../development/python-modules/v4l2py { };
+
   validate-email = callPackage ../development/python-modules/validate-email { };
 
   validators = callPackage ../development/python-modules/validators { };
