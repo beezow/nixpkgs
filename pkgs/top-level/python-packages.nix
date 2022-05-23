@@ -1519,6 +1519,8 @@ in {
 
   connection-pool = callPackage ../development/python-modules/connection-pool { };
 
+  control = callPackage ../development/python-modules/python-control { };
+
   coqpit = callPackage ../development/python-modules/coqpit { };
 
   coqui-trainer = callPackage ../development/python-modules/coqui-trainer {};
