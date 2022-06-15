@@ -15,8 +15,8 @@ stdenv.mkDerivation rec {
   inherit pname;
   version = "10.8.0";
   src = fetchurl {
-    url = "https://github.com/betaflight/${pname}/releases/download/${version}-RC6/${pname}_${version}_linux64-portable.zip";
-    sha256 = "cf9e023602bf88ade6bfc572a9a62f25afbc6b177b89579a9cb1844903074f7d";
+    url = "https://github.com/betaflight/${pname}/releases/download/${version}/${pname}_${version}_linux64-portable.zip";
+    sha256 = "5e7d206b667550a77ef93ae22f8eee955ea27554cd051f2e8925bb1672fbaf58";
   };
 
   nativeBuildInputs = [ wrapGAppsHook unzip ];
